@@ -1,104 +1,58 @@
-# Regression Models Comparison
+# Regression Comparison
 
-This project presents a comprehensive benchmark of four regression algorithms implemented using both **analytical (closed-form)** and **numerical (gradient descent)** approaches — evaluated on the *House Prices: Advanced Regression Techniques* dataset. The pipeline includes robust preprocessing, categorical encoding, model training, and rigorous performance assessment.
-
----
-
-## Results and Interpretation
-
-- **Ridge Regression**: Reduces variance and mitigates overfitting via L2 regularization.  
-- **Lasso Regression**: Promotes sparsity and performs implicit feature selection via L1 regularization.  
-- **Elastic Net**: Combines L1 and L2 penalties, balancing bias-variance trade-offs — achieves top performance.  
-- **Analytical vs. Numerical**:  
-  - *Analytical (scikit-learn)*: Fast and stable for moderate-scale problems.  
-  - *Numerical (Keras)*: Flexible and scalable, but sensitive to hyperparameter tuning (learning rate, epochs, optimizer).
-
-| Model                          | R²       | MAE   | RMSE    | Kaggle Score | Overfitting | Notes |
-|--------------------------------|----------|-------|---------|--------------|-------------|-------|
-| Linear Regression (scikit-learn) | 0.87–0.89 | ~0.19 | 0.25691 | 0.25691      | Slight      | Reliable baseline; captures linear structure effectively |
-| Linear Regression (Keras)        | ~0.63    | ~0.28 | 0.33366 | 0.33366      | Severe      | Underfitting; suboptimal convergence due to learning rate/epoch settings |
-| Ridge Regression (scikit-learn)  | ~0.85    | ~0.20 | 0.17050 | 0.17050      | Minimal     | Improved stability via L2; modest gains over baseline |
-| Ridge Regression (Keras)         | ~0.63    | ~0.27 | 0.24580 | 0.24580      | Underfitting | Requires careful hyperparameter tuning |
-| Lasso Regression (scikit-learn)  | ~0.89    | ~0.17 | 0.13459 | 0.13459      | Low         | Strong feature selection; excellent generalization |
-| Lasso Regression (Keras)         | ~0.89    | ~0.17 | 0.15724 | 0.15724      | Low         | Competitive, but slightly inferior to scikit-learn counterpart |
-| ElasticNet (scikit-learn)        | ~0.89    | ~0.17 | 0.13396 | 0.13396      | Very low    | Optimal balance of L1/L2; best overall performer |
-| ElasticNet (Keras)               | ~0.89    | ~0.17 | 0.14579 | 0.14579      | Low         | Solid, yet marginally behind analytical implementation |
----
-
-## Project Overview
-
-The implementation demonstrates:
-
-- End-to-end processing of heterogeneous housing data (numerical, nominal, ordinal)  
-- Comparative study of four regression methods:  
-  1. Linear Regression  
-  2. Ridge (L2 regularization)  
-  3. Lasso (L1 regularization)  
-  4. Elastic Net (combined L1 + L2)  
-- Dual implementations:  
-  - *Analytical*: Using scikit-learn’s optimized solvers  
-  - *Numerical*: Using TensorFlow/Keras with gradient-based optimization  
-- Quantitative evaluation via standard regression metrics and coefficient analysis
-
-![Results](results/results.png)
-
----
-
-## Project Structure
+Project nghiên cứu và so sánh 9 thuật toán hồi quy tuyến tính: **Linear, Polynomial, Ridge, Lasso,
+Elastic Net, LARS, Huber, Quantile, Bayesian Linear**.
 
 ```
-project_root/
-├── data/
-│   ├── train.csv
-│   └── test.csv
-├── notebooks/
-│   ├── 01_eda.ipynb
-│   └── 02_regression.ipynb
-├── requirements.txt
-└── README.md
+docs/      9 bài viết (.md + hình), chép nguyên văn từ repo AI-Algorithm
+checks/    script kiểm chứng của 9 bài, chép nguyên văn từ AI-Algorithm/tools
+src/       code so sánh: data.py · models.py · compare.py
+scripts/   sync_docs.py — đồng bộ docs/ từ AI-Algorithm
+results/   đầu ra của compare.py và của checks/run_all.py
 ```
 
----
+## docs/ — đồng bộ một chiều
 
-## Dataset
+Sửa bài ở `AI-Algorithm`, rồi chạy:
 
-- **Source**: [Kaggle – House Prices: Advanced Regression Techniques](https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques)  
-- **Target**: `SalePrice` (log-transformed in preprocessing)  
-- **Features**:  
-  - *Nominal categorical*: e.g., Neighborhood, Street  
-  - *Ordinal categorical*: e.g., OverallQual, KitchenQual  
-  - *Numerical*: e.g., GrLivArea, GarageArea
+```
+python scripts/sync_docs.py --dry-run   # xem sẽ đổi gì
+python scripts/sync_docs.py             # chép file mới/đổi
+python scripts/sync_docs.py --prune     # xoá luôn file nguồn không còn
+```
 
----
+Đừng sửa tay trong `docs/`: lần đồng bộ sau sẽ ghi đè. Các liên kết tương đối trỏ ra ngoài 9 bài
+(`../../_papers/…`, `../../../tools/…`, bài của nhóm khác) sẽ không mở được ở đây vì file `.md` được giữ nguyên.
 
-## Preprocessing Pipeline
+## src/ — so sánh 9 thuật toán
 
-- **Feature categorization & encoding**:  
-  - Nominal → one-hot encoding  
-  - Ordinal → integer mapping based on semantic order  
-  - Numerical → used directly, then standardized  
-- **Scaling**: `StandardScaler` applied to ensure numerical stability in gradient-based training.
+```
+python -m src.compare                          # cả hai bộ dữ liệu, CV 5 fold × 3 lần
+python -m src.compare --data diabetes --quad   # mọi thuật toán chạy trên cột nở bậc 2
+python -m src.compare --only Ridge Lasso LARS
+```
 
----
+| Bộ dữ liệu | Cỡ | Vì sao chọn |
+|---|---|---|
+| `diabetes` | 442 × 10 | Đúng bộ của Efron et al. 2004 (bài LARS), các bài Lasso/Elastic Net cũng chạy trên nó. Nhỏ, cột s1–s5 tương quan mạnh: thấy rõ Ridge co đều, Lasso chọn một, Elastic Net giữ nhóm. Bậc 2 ra 65 cột, gần mô hình m=64 của bài báo. |
+| `california` | 5 000 × 8 (lấy mẫu từ 20 640) | Giá bị chặn ở 5,0 nên nhãn có cụm ngoại lai, nơi Huber và Quantile khác bình phương tối thiểu. Quan hệ phi tuyến nên Polynomial có việc làm. |
 
-## Model Implementations
+Mỗi thuật toán tự chọn siêu tham số bằng CV bên trong; CV ngoài dùng cùng các fold cho mọi thuật toán,
+nên so sánh là so sánh ghép cặp.
 
-Each algorithm is realized in two variants:
+## checks/ — script kiểm chứng
 
-| Algorithm         | Analytical (scikit-learn)       | Numerical (Keras)                        |
-|-------------------|----------------------------------|------------------------------------------|
-| Linear Regression | `LinearRegression()`            | Dense layer, Adam optimizer, MSE loss   |
-| Ridge             | `Ridge(alpha=λ)`                | `kernel_regularizer=l2(λ)`              |
-| Lasso             | `Lasso(alpha=λ)`                | `kernel_regularizer=l1(λ)`              |
-| Elastic Net       | `ElasticNet(alpha=λ, l1_ratio=r)` | `kernel_regularizer=l1_l2(l1=λ·r, l2=λ·(1−r))` |
+Các `v_*.py` dựng lại từng con số trong bài từ nguồn gốc (bài báo, sách). Chạy riêng từng file:
+`cd checks && python v_linreg.py`. `run_all.py` chạy tất cả rồi đối chiếu với `_out_*.txt` (đầu ra lần chạy gốc).
 
----
+Ngoài `v_*.py`, thư mục này còn có (chép nguyên văn, chưa chạy):
 
-## Evaluation Metrics
+| Nhóm | File |
+|---|---|
+| Kiểm bài viết | `khoi7` `luat1` `xungho` `bangcot` `fixfence` `checklinks` `congthuc` `kytu` `danchieu` `kiempdf` |
+| Đối chiếu bài báo | `kiemtrich` `sopaper` `sohinh` `pdfscan` |
+| Sinh hình cho bài | `fig_*` (9 bài) |
+| Demo | `demo_enet` `demo_shrink` |
 
-- **R² Score**: Proportion of target variance explained  
-- **MAE (Mean Absolute Error)**: Average magnitude of prediction errors  
-- **RMSE (Root Mean Squared Error)**: Emphasizes larger errors  
-- Cross-implementation comparison of coefficients and training behavior
-
----
+Các script đọc PDF ở `AI algorithms/_papers/`, đọc bài ở `AI algorithms/Machine Learning/` hoặc ghi hình vào đó
+đều tính đường dẫn theo bố cục của repo gốc. Bố cục này không có trong project, nên các script đó chưa chạy được ở đây.

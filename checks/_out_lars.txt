@@ -1,0 +1,813 @@
+
+==============================================================================================
+1.  Bảng 1 tr.3 và quy ước chuẩn hoá (1.1) — dữ liệu nào, đơn vị nào
+==============================================================================================
+   n = 442 bệnh nhân, m = 10 biến nền; tên cột: age, sex, bmi, bp, s1, s2, s3, s4, s5, s6
+
+   Bảng 1 của bài báo in 6 dòng đầu và 2 dòng cuối. Dựng lại từ dữ liệu gốc:
+      BN  |  x1  x2   x3     x4    x5    x6     x7   x8     x9     x10 |   y
+        1 |     59      2   32.1    101    157   93.2     38      4 4.8598     87 |   151
+        2 |     48      1   21.6     87    183  103.2     70      3 3.8918     69 |    75
+        3 |     72      2   30.5     93    156   93.6     41      4 4.6728     85 |   141
+        4 |     24      1   25.3     84    198  131.4     40      5 4.8903     89 |   206
+        5 |     50      1     23    101    192  125.4     52      4 4.2905     80 |   135
+        6 |     23      1   22.6     89    139   64.8     61      2 4.1897     68 |    97
+      441 |     36      1     30     95    201  125.2     42   4.79 5.1299     85 |   220
+      442 |     36      1   19.6     71    250  133.2     97      3 4.5951     92 |    57
+
+   Bảng 1 in x8 của bệnh nhân 441 là 5; dữ liệu có 4.79.
+   Bảng 1 in x9 của bệnh nhân 1 là 4.9; dữ liệu có 4.8598.
+   -> Bảng 1 là bản ĐÃ LÀM TRÒN, và chú thích bảng không nói điều đó.
+
+   Chuẩn hoá theo (1.1): Σyᵢ = -3.411e-12 · Σxᵢⱼ lớn nhất = 9.999e-14 · Σxᵢⱼ² = 1.0000000000
+   `load_diabetes()` của sklearn ĐÃ theo đúng quy ước này: lệch 2.776e-17
+   Nếu dùng nhầm quy ước 'độ lệch chuẩn = 1' thì mỗi cột dài √(n−1) = 21.000000 lần
+
+   Σ|β̂| của nghiệm OLS, theo quy ước (1.1)      : 3459.9776
+   Σ|β̂| của nghiệm OLS, theo ĐƠN VỊ GỐC         : 107.1213
+   Bài báo tr.4 in t cuối = 3460.00 và câu sau (1.1) nói *numerical results are
+   expressed in the original units*. Con số 3460 là con số của quy ước (1.1),
+   KHÔNG phải của đơn vị gốc — hai giá trị cách nhau 32.30 lần.
+
+==============================================================================================
+2.  LARS viết TỪ ĐẦU theo (2.4)–(2.13), đối chiếu với sklearn
+==============================================================================================
+   LARS   : tự viết 10 bước · sklearn 10 bước · lệch hệ số lớn nhất 7.890e-11
+   Lasso  : tự viết 12 bước · sklearn 12 bước · lệch hệ số lớn nhất 1.706e-10
+   Bài báo tr.12: *12 instead of 10 in this example* -> KHỚP cả hai con số.
+
+   Cột cuối của đường LARS có đúng bằng nghiệm OLS không? lệch 4.832e-11
+   Cột cuối của đường lasso có đúng bằng nghiệm OLS không? lệch 7.947e-11
+
+==============================================================================================
+3.  Bất biến cách đều góc: (2.7) · (2.16) · (2.18)
+==============================================================================================
+   (2.7)  X_A'u_A = A_A·1  và  ‖u_A‖ = 1 — kiểm ở MỌI bước của đường LARS
+      lệch lớn nhất của X_A'u_A − A_A·1 : 3.775e-15
+      lệch lớn nhất của ‖u_A‖ − 1       : 2.998e-15
+
+   Bảng bất biến — mọi biến hoạt động có |tương quan| BẰNG NHAU (đường lasso):
+   bước | tập hoạt động          | |ĉ| của biến hoạt động  |  độ trải  | trần biến ngoài
+       1 | 3                      |  889.313785            | 0.00e+00  |  889.313785
+       2 | 3,9                    |  452.895701            | 2.27e-13  |  452.895701
+       3 | 3,4,9                  |  316.073379            | 5.68e-13  |  316.073379
+       4 | 3,4,7,9                |  130.129537            | 4.26e-13  |  130.129537
+       5 | 2,3,4,7,9              |   88.784299            | 7.11e-13  |   88.784299
+       6 | 2,3,4,7,9,10           |   68.964790            | 9.24e-13  |   68.964790
+       7 | 2,3,4,5,7,9,10         |   19.981165            | 1.20e-12  |   19.981165
+       8 | 2,3,4,5,7,8,9,10       |    5.477536            | 1.29e-12  |    5.477536
+       9 | 2,3,4,5,6,7,8,9,10     |    5.088236            | 1.40e-12  |    5.088236
+      10 | 1,2,3,4,5,6,8,9,10     |    2.182267            | 1.44e-12  |    2.182267
+      11 | 1,2,3,4,5,6,8,9,10     |    1.310441            | 1.41e-12  |    1.310441
+      12 | 1,2,3,4,5,6,7,8,9,10   |    0.000000            | 1.49e-12  |    0.000000
+   -> độ trải lớn nhất trên cả đường: 1.489e-12
+
+   (2.16) |c_j(γ)| = Ĉ − γ·A_A cho j ∈ A — kiểm bằng cách đi nửa bước:
+      γ =  237.359 : đo được   712.076445 · công thức   712.076445 · lệch 2.27e-13
+      γ =  474.718 : đo được   474.717630 · công thức   474.717630 · lệch 2.27e-13
+      γ =  712.076 : đo được   237.358815 · công thức   237.358815 · lệch 2.84e-14
+
+   (2.18) Ĉ_k = Ĉ_{k−1} − γ̂_{k−1}·A_{k−1} — dãy Ĉ trên đường LARS:
+      949.4353 889.3138 452.8957 316.0734 130.1295 88.7843 68.9648 19.9812 5.4775 5.0882 0.0000
+      dãy có giảm đơn điệu không? CÓ
+
+==============================================================================================
+4.  Quan hệ với OLS: (2.19)–(2.22), và vì sao γ̂ luôn nhỏ hơn γ̄
+==============================================================================================
+   k | Ĉ_k       | A_k      | γ̄_k = Ĉ_k/A_k | γ̂_k        | ρ_k = γ̂/γ̄ | lệch (2.19)
+    1 |  949.4353 | 1.000000 |      949.4353 |    60.1215 |   0.063323 | 2.84e-14
+    2 |  889.3138 | 0.850340 |     1045.8331 |   513.2277 |   0.490736 | 1.56e-13
+    3 |  452.8957 | 0.779404 |      581.0799 |   175.5475 |   0.302106 | 8.53e-14
+    4 |  316.0734 | 0.716910 |      440.8829 |   259.3684 |   0.588293 | 8.53e-14
+    5 |  130.1295 | 0.466376 |      279.0230 |    88.6522 |   0.317724 | 1.56e-13
+    6 |   88.7843 | 0.453713 |      195.6840 |    43.6830 |   0.223232 | 1.35e-13
+    7 |   68.9648 | 0.360219 |      191.4524 |   135.9829 |   0.710270 | 1.99e-13
+    8 |   19.9812 | 0.268511 |       74.4146 |    54.0150 |   0.725865 | 3.30e-13
+    9 |    5.4775 | 0.069747 |       78.5342 |     5.5816 |   0.071072 | 1.52e-12
+   10 |    5.0882 | 0.069214 |       73.5146 |    73.5146 |   1.000000 | 1.69e-12
+   -> ρ_k < 1 ở mọi bước trừ bước cuối? ĐÚNG ; ρ lớn nhất trước bước cuối = 0.725865
+   Bài báo tr.10: *γ̂_k is always less than γ̄_k, so that μ̂_k lies closer than ȳ_k*
+
+==============================================================================================
+5.  Sửa đổi lasso (3.1)–(3.6): Định lý 1
+==============================================================================================
+   (3.1) dấu(β̂_j) = dấu(ĉ_j) cho mọi j hoạt động — kiểm trên CẢ hai đường.
+   Bỏ qua bước cuối cùng, nơi Ĉ = 0 nên dấu của ĉ chỉ còn là nhiễu số học.
+      LARS gốc :  0/ 45 cặp (bước, biến) VI PHẠM điều kiện dấu 
+      lasso    :  0/ 63 cặp (bước, biến) VI PHẠM điều kiện dấu 
+   -> Tại các ĐIỂM GÃY, cả hai đường đều không vi phạm. Nhưng chỗ vi phạm của LARS
+      gốc nằm GIỮA hai điểm gãy, nên phải quét trên một lưới dày mới thấy:
+      LARS gốc :  626/4001 điểm trên lưới VI PHẠM — chỉ ở biến [7], trong khoảng t = 2917.9 .. 3458.2
+      lasso    :    0/4001 điểm trên lưới VI PHẠM
+   -> Đường lasso KHÔNG vi phạm điểm nào — đúng Bổ đề 8 tr.29.
+   -> LARS gốc vi phạm ở đúng biến 7, trong một khoảng nằm GIỮA hai điểm gãy cuối.
+      Đó chính là khoảng mà (3.6) cắt ra bằng cách bỏ biến 7 khỏi tập hoạt động.
+
+   Sửa đổi (3.6) kích hoạt 1 lần: biến 7 tại bước 10
+   Thứ tự biến vào trên đường lasso (đếm cả lần vào lại): [3, 9, 4, 7, 2, 10, 5, 8, 6, 1, 7]
+   Bài báo tr.12: *There A contained all 10 indices while A+ = A − {7}.*
+      trong bước 10, A có 10 biến (1,2,3,4,5,6,7,8,9,10); sau (3.6), A+ còn 9 biến (1,2,3,4,5,6,8,9,10)
+   Bài báo tr.12: *Variable 7 was restored to the active set one LARS step later.*
+      biến 7 vắng mặt ở đúng các bước [10, 11], rồi trở lại ở bước 12
+
+==============================================================================================
+6.  Dựng lại Hình 1 tr.4 và Hình 3 tr.9
+==============================================================================================
+   Hình 1 bảng trái (lasso) — bài báo nói: thứ tự 3, 9, 4, 7, …, 1 ; t chạy tới 3460.00
+      dựng lại thứ tự    : [3, 9, 4, 7, 2, 10, 5, 8, 6, 1, 7]
+      bốn biến đầu [3, 9, 4, 7] -> KHỚP
+      biến vào cuối cùng trong 10 biến đầu tiên: 1 -> KHỚP
+      t tại bước cuối    : 3459.9776
+
+   Hình 3 bảng trái (LARS gốc) — bài báo tr.9 nói CÙNG thứ tự 3, 9, 4, 7, …, 1
+      dựng lại thứ tự    : [3, 9, 4, 7, 2, 10, 5, 8, 6, 1]
+      t tại bước cuối    : 3459.9776 ; lệch với đường lasso 8.959e-11
+
+   Bài báo tr.4: *At t = 1000 … only variables 3, 9, 4 and 7 enter*
+      nội suy tại t = 1000 -> biến khác 0: [3, 4, 7, 9] -> KHỚP
+      hệ số tại đó: β3=456.5322 β4=113.6348 β7=-35.0357 β9=394.7973
+
+   Hai đường LARS và lasso khác nhau bao nhiêu? (so tại cùng t, nội suy)
+      lệch hệ số lớn nhất giữa hai đường: 50.6412 (trên thang hệ số cỡ 792)
+   Bài báo tr.9: *nearly but not exactly the same* -> đúng: gần nhau, không trùng.
+
+==============================================================================================
+7.  Forward Stagewise bước ε (1.7), và giới hạn ε → 0
+==============================================================================================
+   Bài báo tr.5: *The estimates were built up in 6000 Stagewise steps*
+   Chạy ĐÚNG 6000 bước, xem mỗi ε đưa đường đi được tới đâu (t cuối = 3459.98):
+      ε = 1.0000  -> Σ|β̂| = 3368.0000 ( 97.3% đường) · lệch với đường lý tưởng 0.6424
+      ε = 0.5767  -> Σ|β̂| = 3012.6808 ( 87.1% đường) · lệch với đường lý tưởng 4.0542
+      ε = 0.4000  -> Σ|β̂| = 2260.0000 ( 65.3% đường) · lệch với đường lý tưởng 5.2569
+      ε = 0.2000  -> Σ|β̂| = 1200.0000 ( 34.7% đường) · lệch với đường lý tưởng 0.1122
+
+   Hai bảng của Hình 1 dùng CHUNG trục ngang chạy tới t = 3459.98. Quét ε để tìm giá trị
+   đưa được xa nhất trong đúng 6000 bước:
+      ε = 0.40  -> Σ|β̂| = 2260.0000 ( 65.3% đường)
+      ε = 0.60  -> Σ|β̂| = 3150.0000 ( 91.0% đường)
+      ε = 0.80  -> Σ|β̂| = 3384.0000 ( 97.8% đường)
+      ε = 1.00  -> Σ|β̂| = 3368.0000 ( 97.3% đường)
+      ε = 1.20  -> Σ|β̂| = 3372.0000 ( 97.5% đường)
+      ε = 1.50  -> Σ|β̂| = 3315.0000 ( 95.8% đường)
+      ε = 2.00  -> Σ|β̂| = 3232.0000 ( 93.4% đường)
+      ε = 3.00  -> Σ|β̂| = 3204.0000 ( 92.6% đường)
+      -> giá trị tốt nhất: ε = 0.80 cho 3384.0000, tức 97.8% quãng đường.
+      6000 bước KHÔNG phủ hết trục ngang của Hình 1 với bất kỳ ε nào trong lưới này:
+      ε nhỏ thì đi chậm, ε lớn thì dao động quanh nghiệm OLS mà không tiến thêm.
+
+   MỘT BẪY: với ε hữu hạn, Stagewise KHÔNG dừng ở nghiệm OLS mà DAO ĐỘNG quanh nó.
+      ε = 1.00 , đích Σ|β̂| = 3459.98: sau 300000 bước VẪN CHƯA TỚI (Σ|β̂| dừng ở 3368.0000)
+      ε = 0.10 , đích Σ|β̂| = 3459.98: sau 300000 bước VẪN CHƯA TỚI (Σ|β̂| dừng ở 3454.2000)
+      Lý do: gần nghiệm OLS, mọi |ĉ_j| đều nhỏ hơn ε nên hệ số nhảy +ε rồi −ε mãi.
+      Vì thế bảng dưới lấy đích là 90%% quãng đường, chỗ còn đi được.
+
+   Chi phí tỉ lệ NGHỊCH với ε — đích Σ|β̂| = 3113.98 (90% đường):
+      ε = 10.00  ->    500000 bước (2.201 giây) CHƯA TỚI
+      ε = 1.00   ->      3566 bước (0.016 giây) 
+      ε = 0.10   ->     35634 bước (0.160 giây) 
+      ε = 0.01   ->    356310 bước (1.579 giây) 
+      LARS       ->        10 bước là đi HẾT đường, không phải 90%.
+
+   ε → 0 có hội tụ về đường LARS–Stagewise không? So tại cùng t, lệch lớn nhất:
+      ε = 4.0000  (    433 bước): lệch    9.6762  (lệch/ε = 2.4190)
+      ε = 1.0000  (   1730 bước): lệch    0.7067  (lệch/ε = 0.7067)
+      ε = 0.2500  (   6920 bước): lệch    0.2067  (lệch/ε = 0.8268)
+      ε = 0.0625  (  27680 bước): lệch    0.0416  (lệch/ε = 0.6651)
+      -> lệch giảm TỈ LỆ THUẬN với ε: đó là nghĩa của 'idealized Stagewise' tr.13.
+
+==============================================================================================
+8.  Sửa đổi Stagewise (3.8)–(3.14): Định lý 2, chiếu vào nón lồi
+==============================================================================================
+   Đường LARS–Stagewise tự dựng: 13 bước; tới OLS chưa? lệch 7.958e-11
+   Bài báo tr.14: *It took a total of 13 modified LARS steps to reach the full OLS*
+   Các lần tập hoạt động BỊ THU NHỎ: [(7, [3, 7], [2, 3, 4, 5, 7, 8, 9, 10]), (11, [3], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])]
+   Bài báo tr.14: *there the set A = {3, 9, 4, 7, 2, 10, 5, 8} was decreased to
+                   B̂ = A − {3, 7}*
+      dựng lại: tại bước 7, A = [2, 3, 4, 5, 7, 8, 9, 10] bị thu về B̂ = A − [3, 7]
+      -> KHỚP cả tập A lẫn tập bị bỏ
+
+   (3.14) dấu(β̂⁺_j − β̂_j) = s_j: hiệu hệ số liên tiếp luôn CÙNG DẤU với ĐI của nó?
+      0/77 hiệu VI PHẠM -> Stagewise thật sự không bao giờ lùi ngược chiều.
+
+   Chú thích Hình 1 tr.4: *The two plots are nearly identical, but differ slightly
+   for large t as shown in the track of covariate 8.*  Đo lệch theo TỪNG biến:
+      trên CẢ đường  — biến 7 : lệch lớn nhất  52.3827 tại t = 2062.1
+      trên CẢ đường  — biến 8 : lệch lớn nhất  43.0596 tại t = 2062.1
+      trên CẢ đường  — biến 5 : lệch lớn nhất  31.0181 tại t = 2802.6
+      trên CẢ đường  — biến 6 : lệch lớn nhất  20.8686 tại t = 2861.4
+      -> biến lệch nhiều nhất trên cả đường là biến 7.
+
+   Nhưng chú thích nói *for LARGE t*. Đo lại chỉ trên một phần tư cuối (t > 2595):
+      t lớn        — biến 5 : lệch lớn nhất  31.0181
+      t lớn        — biến 7 : lệch lớn nhất  30.3483
+      t lớn        — biến 8 : lệch lớn nhất  24.2453
+      t lớn        — biến 6 : lệch lớn nhất  20.8686
+      -> ở t lớn, biến lệch nhiều nhất là biến 5 -> KHÔNG phải biến 8
+
+   Phép so trên chưa CÔNG BẰNG: bảng phải Hình 1 là bản ε hữu hạn 6000 bước, không
+   phải đường lý tưởng. Đo lại trên đúng bản ấy, ε = t/6000 = 0.576663:
+      sau 6000 bước, Σ|β̂| = 3012.4872 (87.1% đường); lệch với đường lasso theo biến:
+         biến 3 :   2.8382
+         biến 6 :   1.7287
+         biến 9 :   0.9008
+         biến 5 :   0.8579
+      -> biến lệch nhiều nhất là biến 3 -> KHÔNG phải biến 8
+      Ba cách đo — cả đường, một phần tư cuối, và đúng bản 6000 bước — cho ba câu
+      trả lời khác nhau, và KHÔNG cách nào chỉ vào biến 8.
+
+==============================================================================================
+9.  Mô hình bậc hai (3.15) m = 64 — dựng lại 'true R² = 0.416'
+==============================================================================================
+   (3.15): 10 hiệu ứng chính + 45 tương tác + 9 bình phương
+      C(10,2) = 45 tương tác; 10 − 1 = 9 bình phương (bỏ x2 nhị phân); tổng = 64
+
+   Dựng tích từ cột NÀO? Bài báo không nói. Thử cả hai, để con số 0,416 phân xử:
+      từ cột đã chuẩn hoá (1.1)    -> true R² = 0.415630
+      từ cột theo đơn vị gốc       -> true R² = 0.503001
+      Bài báo tr.15: *The "true R²" for this model … equaled 0.416*
+
+   Chốt: dựng từ cột đã chuẩn hoá. m = 64, hạng = 64, số điều kiện 5.4699e+03
+   true R² = ‖μ‖²/(‖μ‖² + ‖ε‖²) = 0.415630  (bài báo: 0.416) -> lệch 0.000370
+   10 biến được chọn: ['x3', 'x4', 'x7', 'x9', 'x1:x2', 'x1:x4', 'x1:x10', 'x3:x4', 'x3²', 'x10²']
+
+   Số bước của ba thuật toán trên m = 64 — bài báo nêu 3 con số:
+      LARS      :  64 bước (bài báo: 64)  | tới OLS? lệch 1.22e-06
+      Lasso     : 104 bước (bài báo: 103) | tới OLS? lệch 4.75e-06
+      Stagewise : 251 bước (bài báo: 255) | tới OLS? lệch 7.26e-06
+      (cả ba đường tính trong 0.21 giây)
+      §7 tr.40: *increasing the computations by a factor up to 5 or more*
+      -> đo được: Stagewise/LARS = 251/64 = 3.9219 lần
+
+   `sklearn.linear_model.lars_path(method='lar')` trên CHÍNH thiết kế này:
+      số bước: 96 (thay vì 64) | Σ|β̂| ở bước cuối: 8.3768e+14 | RSS ở bước cuối: 4.3742e+22
+      RSS của nghiệm OLS: 1068217.7577 ; RSS của bản tự viết ở bước 64: 1068217.7577
+      tại bước 64, sklearn mới có 51 hệ số khác 0 và RSS = 20424024.5913
+      dãy alpha của sklearn có giảm đơn điệu không? KHÔNG
+      -> chế độ 'lar' của sklearn PHÂN KỲ trên thiết kế này, và không phát cảnh báo nào.
+      Chế độ 'lasso' thì không sao: 104 bước, lệch với bản tự viết 6.90e-06
+
+==============================================================================================
+10. Mô phỏng §3.3 tr.15 và Hình 5 — 100 lần lặp mô hình (3.15)–(3.16)
+==============================================================================================
+   100 lần lặp × 4 thuật toán, chạy trong 3.0 giây
+
+   LARS              : pe lớn nhất 0.966422 tại k = 11 ; độ lệch chuẩn trung bình 0.022894  (bài báo: 0.963 tại k = 10)
+   Lasso             : pe lớn nhất 0.966404 tại k = 11 ; độ lệch chuẩn trung bình 0.022423  
+   Stagewise         : pe lớn nhất 0.966514 tại k = 11 ; độ lệch chuẩn trung bình 0.022298  
+   Forward Selection : pe lớn nhất 0.956009 tại k =  3 ; độ lệch chuẩn trung bình 0.023598  (bài báo: 0.950 tại k = 3)
+   Bài báo tr.15: *reaching a maximum of 0.963 at k = 10* và
+                  *the light dots display the small standard deviation … roughly ±0.02*
+                  *Forward Selection … rises very quickly, to a maximum of 0.950 after k = 3*
+
+   Bài báo tr.15: *μ̂^(40)* averaged 33.23 nonzero terms with Stagewise, compared to
+                  35.83 for Lasso and 40 for LARS.*
+      Stagewise : trung bình số hệ số khác 0 ở bước 40 = 35.5900  (bài báo 33.23)
+      Lasso     : trung bình số hệ số khác 0 ở bước 40 = 35.5200  (bài báo 35.83)
+      LARS      : trung bình số hệ số khác 0 ở bước 40 = 40.0000  (bài báo 40.00)
+
+   Bài báo tr.16: *Stopping at any point between k = 5 and 25 typically gave a μ̂ with
+                  true predictive R² about 0.40, compared to the ideal value 0.416*
+      pe trung bình của LARS trong khoảng k = 5..25: từ 0.942532 tới 0.966422
+      R² dự báo thật = pe × true R² -> từ 0.391745 tới 0.401674
+
+==============================================================================================
+11. Positive Lasso (3.18)–(3.19) — ba chỗ sửa, và chỗ nó KHÔNG tới OLS
+==============================================================================================
+   Đường positive lasso: 5 bước; hệ số cuối có âm không? nhỏ nhất = 0.000000
+   Nghiệm bình phương tối thiểu KHÔNG ÂM (scipy.optimize.nnls): lệch 1.023e-12
+   Bài báo tr.16: *The positive Lasso usually does not converge to the full OLS*
+      Σ|β̂| của positive lasso ở cuối : 1439.7988
+      Σ|β̂| của OLS đầy đủ            : 3459.9776
+      OLS có mấy hệ số ÂM? 3/10 -> nên ràng buộc β ≥ 0 CẮT MẤT nghiệm OLS
+      RSS: positive lasso 1358786.98 · OLS 1263985.79 · tệ hơn 7.5002%
+   Số biến vào được: 5/10 (các biến [3, 4, 8, 9, 10])
+
+==============================================================================================
+12. LARS–OLS hybrid (3.20) — CHỖ IN SAI THỨ NHẤT
+==============================================================================================
+   Bài báo tr.16 in:  R²(β̄_k) − R²(β̂_k) = [1 − ρ_k²]/[ρ_k(2 − ρ_k)] · [R²(β̂_k) − R²(β̂_{k−1})]
+   Suy lại từ hình học Hình 4 thì tử số phải là (1 − ρ_k)², không phải 1 − ρ_k².
+
+    k |   ρ_k    | VẾ TRÁI đo được | (1−ρ)²/(ρ(2−ρ))·Δ | 1−ρ²/(ρ(2−ρ))·Δ | sai số bản in
+    1 | 0.063323 |   0.30174600    |    0.30174600     |   0.34254468  |    1.14 lần
+    2 | 0.490736 |   0.10822873    |    0.10822873     |   0.31681085  |    2.93 lần
+    3 | 0.302106 |   0.06274550    |    0.06274550     |   0.11706823  |    1.87 lần
+    4 | 0.588293 |   0.01257054    |    0.01257054     |   0.04849497  |    3.86 lần
+    5 | 0.317724 |   0.01382713    |    0.01382713     |   0.02670521  |    1.93 lần
+    6 | 0.223232 |   0.00881504    |    0.00881504     |   0.01388168  |    1.57 lần
+    7 | 0.710270 |   0.00117392    |    0.00117392     |   0.00692965  |    5.90 lần
+    8 | 0.725865 |   0.00015877    |    0.00015877     |   0.00099958  |    6.30 lần
+    9 | 0.071072 |   0.00203055    |    0.00203055     |   0.00234126  |    1.15 lần
+   10 | 1.000000 |   -0.00000000    |    0.00000000     |   0.00000000  |    0.00 lần
+
+   Công thức (1 − ρ)² khớp 10/10 dòng trong sai số 1.39e-15;
+   bản in 1 − ρ² lệch tới 6.30 lần ở dòng tệ nhất.
+   Hệ số giữa hai bản là (1+ρ)/(1−ρ), bằng 1 chỉ khi ρ = 0 và ra ∞ khi ρ → 1.
+
+   Bài báo tr.17: *The increases in R² were small … on the order of 0.01 for k ≥ 4
+                  compared with R² ≐ 0.50*
+      R² của mô hình đầy đủ = 0.517748
+      mức tăng khi thay β̂_k bằng OLS trên cùng tập biến, k = 4..9: 0.0126 0.0138 0.0088 0.0012 0.0002 0.0020
+
+==============================================================================================
+13. Bậc tự do (4.1)–(4.10): bootstrap, và C_p — Hình 6 tr.19 và Hình 7 tr.20
+==============================================================================================
+   Hình 6 bảng TRÁI — diabetes m = 10, B = 500 lần bootstrap, σ̄ = 54.1542:
+      k        :      1      2      3      4      5      6      7      8      9     10
+      df ước   :   0.96   2.08   2.90   3.97   4.84   5.76   6.61   7.59   8.70  10.08
+      sai số   :   0.07   0.13   0.12   0.10   0.10   0.07   0.12   0.15   0.16   0.15
+      |df − k|  lớn nhất = 0.4133 ; trung bình = 0.1846
+      số k mà df = k nằm trong khoảng tin cậy 95% (t với 9 bậc tự do, ±2.262·se): 7/10
+      các k mà df ĐO ĐƯỢC THẤP HƠN k một cách có ý nghĩa: [6, 7, 8]
+      Bài báo (4.9) tr.18: *df(μ̂_k) ≐ k* — gọi là 'the simple approximation'.
+
+   Hình 6 bảng PHẢI — mô hình bậc hai m = 64, B = 500, σ̄ = 53.2303:
+      k    :     1     4     7    10    13    16    19    22    25    28    31    34    37    40    43    46    49    52    55    58    61    64
+      df   :   0.9   4.1   7.0  10.1  12.9  15.8  18.7  21.5  24.3  27.0  29.8  32.6  35.3  38.0  40.6  43.4  46.2  49.2  52.4  55.7  59.2  63.5
+      |df − k| lớn nhất = 2.8434 tại k = 52 ; trung bình = 1.2346
+      (5.3 giây cho cả hai bảng)
+
+   Hình 7 — C_p(μ̂_k) = ‖y − μ̂_k‖²/σ̄² − n + 2k, công thức (4.10):
+      m = 10: C_p nhỏ nhất tại k = 7 (bài báo: 7) · C_p = 6.8775
+         dãy C_p: 451.72 416.03 141.80 84.74 31.69 19.51 16.33 6.88 7.13 8.84 9.00
+         mô hình được chọn gồm các biến [2, 3, 4, 5, 7, 9, 10]
+      m = 64: C_p nhỏ nhất tại k = 15 (bài báo: 16) · C_p = 16.2003
+         C_p quanh cực tiểu: k=13:19.861 k=14:18.529 k=15:16.200 k=16:17.834 k=17:19.091
+         C_p tại k = 16 là 17.8344, cao hơn cực tiểu 1.6341
+
+==============================================================================================
+14. Điều kiện nón dương (4.11) — đếm trên chính bộ diabetes
+==============================================================================================
+   (4.11): với MỌI tập con A, G_A⁻¹·1_A > 0 theo từng phần tử.
+   Bài báo tr.20: *counterexamples (such as the diabetes data) show that not all
+                  design matrices X satisfy it*
+      đếm được: 418 / 1023 tập con VI PHẠM, tức 40.86%
+      tập con nhỏ nhất vi phạm có 3 phần tử; vài ví dụ:
+         A = (2, 5, 6)      -> phần tử nhỏ nhất của G_A⁻¹·1 = -0.021161
+         A = (5, 6, 7)      -> phần tử nhỏ nhất của G_A⁻¹·1 = -1.266891
+         A = (5, 6, 8)      -> phần tử nhỏ nhất của G_A⁻¹·1 = -0.060373
+         A = (5, 6, 9)      -> phần tử nhỏ nhất của G_A⁻¹·1 = -0.518984
+
+   Thiết kế TRỰC GIAO có thoả không? (bài báo nói có)
+      0/255 tập con vi phạm trên ma trận đơn vị 8×8.
+
+   Dưới điều kiện nón dương, ba thuật toán có TRÙNG nhau không? (bài báo tr.20 nói có)
+      6/6 thiết kế ngẫu nhiên THOẢ (4.11): ba đường trùng nhau tới 1e-8.
+      Còn trên diabetes — thiết kế KHÔNG thoả — ba đường có 10, 12 và 13 bước.
+
+==============================================================================================
+15. (4.13)–(4.15): trace(M_k) = k — CHỖ IN SAI THỨ HAI
+==============================================================================================
+   Bài báo tr.21 in (4.13):  μ̂_k = ȳ_k − cot_k · ‖ȳ_{k+1} − ȳ_k‖
+   Vế trái là VECTƠ trong R^442, vế phải là vectơ trừ một SỐ. Thiếu thừa số u_k.
+
+    k | trace(M_k) | (4.13) có u_k: lệch | (4.13) như in: lệch | M_k có là Jacobian?
+    1 | 1.0000000000 |      2.49e-13       |       969.5969      |  lệch 8.23e-10
+    2 | 2.0000000000 |      4.26e-13       |       586.3522      |  lệch 1.22e-07
+    3 | 3.0000000000 |      9.95e-14       |       445.2869      |  lệch 1.44e-07
+    4 | 4.0000000000 |      1.10e-13       |       205.5922      |  lệch 4.93e-08
+    5 | 5.0000000000 |      1.60e-12       |       218.8565      |  lệch 5.06e-08
+    6 | 6.0000000000 |      3.69e-13       |       174.3181      |  lệch 1.66e-07
+    7 | 7.0000000000 |      4.01e-13       |        62.0371      |  lệch 1.03e-07
+    8 | 8.0000000000 |      4.26e-13       |        23.3713      |  lệch 1.25e-07
+    9 | 9.0000000000 |      1.79e-12       |        91.8683      |  lệch 1.20e-07
+
+   -> trace(M_k) = k tới 10 chữ số, vì u_k ∈ L(X_k) còn v_k ⊥ L(X_k) nên số hạng
+      thứ hai không đóng góp gì vào vết. Đó là toàn bộ lập luận 'delta method' tr.21.
+   -> M_k đúng là đạo hàm cục bộ: nhân M_k với một hướng bất kỳ cho ra cùng kết quả
+      với sai phân hữu hạn của chính thuật toán, sai số cỡ 1e-7 (mức nhiễu của sai phân).
+
+==============================================================================================
+16. Thiết kế trực giao (4.16)–(4.18): Bổ đề 1 và Định lý 3
+==============================================================================================
+   y = +4.0818 -5.1113 +0.8362 -1.1355 -0.9053 -0.4312 -4.0400 -0.4639
+   |y|_(k) xếp giảm dần: 5.1113 4.0818 4.0400 1.1355 0.9053 0.8362 0.4639 0.4312
+
+   Bổ đề 1 tr.22: μ̂_k,i = η(y_i ; |y|_(k+1)) — ngưỡng mềm tại thống kê thứ tự thứ k+1
+      lệch lớn nhất giữa đường LARS và công thức ngưỡng mềm: 1.776e-15
+      ngưỡng tại từng bước: k=0:5.1113 k=1:4.0818 k=2:4.0400 k=3:1.1355 k=4:0.9053 k=5:0.8362 k=6:0.4639 k=7:0.4312 k=8:0.0000
+
+   Trong chứng minh: G_A = I, A_A = |A|^(−1/2), u_A = |A|^(−1/2)·1, a_{k,j} = 0
+      |A| = 1: A_A đo 1.00000000 · công thức 1.00000000 | max|a_j| ngoài A = 0.00e+00
+      |A| = 3: A_A đo 0.57735027 · công thức 0.57735027 | max|a_j| ngoài A = 0.00e+00
+      |A| = 5: A_A đo 0.44721360 · công thức 0.44721360 | max|a_j| ngoài A = 0.00e+00
+
+   Định lý 3 tr.19: thiết kế trực giao -> df(μ̂_k) = k. Kiểm bằng bootstrap:
+      μ = [ 6. -4.  3.  0.  0.  0.  0.  0.], σ = 1
+      k  :       1       2       3       4       5       6       7
+      df :   1.029   2.066   3.124   4.080   5.087   6.081   7.111
+      |df − k| lớn nhất = 0.1238 (B = 2000 lần bootstrap)
+   Chứng minh của bài báo: ∇·μ̂_k = Σᵢ 1{|y_i| > |y|_(k+1)} = k hầu chắc chắn.
+      đếm trực tiếp trên y ở trên: k=0:0 k=1:1 k=2:2 k=3:3 k=4:4 k=5:5 k=6:6 k=7:7
+
+==============================================================================================
+17. §5 — Bổ đề 4, 5, 6: (5.1)–(5.14)
+==============================================================================================
+   Bổ đề 4 tr.25: biến MỚI vào có w_kk và β̂_kk cùng dấu với tương quan c_kk của nó.
+    k | biến mới | dấu ĉ_kk | dấu w_kk | dấu β̂_kk | khớp?
+    1 |     3    |   +1     |   +1     |    +1     | có
+    2 |     9    |   +1     |   +1     |    +1     | có
+    3 |     4    |   +1     |   +1     |    +1     | có
+    4 |     7    |   -1     |   -1     |    -1     | có
+    5 |     2    |   -1     |   -1     |    -1     | có
+    6 |    10    |   +1     |   +1     |    +1     | có
+    7 |     5    |   -1     |   -1     |    -1     | có
+    8 |     8    |   +1     |   +1     |    +1     | có
+    9 |     6    |   +1     |   +1     |    +1     | có
+   10 |     1    |   -1     |   -1     |    -1     | có
+   -> Bổ đề 4 đúng ở mọi bước? ĐÚNG
+
+   Bổ đề 5 tr.27: A_A là KHOẢNG CÁCH từ gốc tới đơn hình mở rộng S_A (5.7).
+   tập A          | A_A theo (2.5) | khoảng cách tối tiểu đo trực tiếp | lệch
+   [3]                              | 1.00000000     |     1.00000000           | 1.11e-16
+   [3, 9]                           | 0.85034009     |     0.85034009           | 0.00e+00
+   [3, 4, 9]                        | 0.77940354     |     0.77940354           | 1.11e-16
+   [2, 3, 4, 7, 9]                  | 0.65912639     |     0.65912639           | 4.44e-16
+   [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]  | 0.43474097     |     0.43474097           | 2.78e-16
+   Bổ đề 5 nói thêm: A ⊆ B thì A_A ≥ A_B, và A_A = 1 đúng khi A có MỘT phần tử.
+      số cặp (A, A∪{j}) VI PHẠM tính đơn điệu: 0 / 5110
+      A_A của 10 tập một phần tử: 1.000000 1.000000 1.000000 1.000000 1.000000 1.000000 1.000000 1.000000 1.000000 1.000000
+      A_A của tập đầy đủ 10 biến: 0.153899 (nhỏ nhất trong 1023 tập)
+
+   Bổ đề 6 tr.27 (5.13): S(γ) − S(0) = −2·ĉ'd·γ + d'X'Xd·γ²
+      γ = 0.5 : đo     233.513077 · công thức     233.513077 · lệch 2.63e-10
+      γ = 2.0 : đo     948.227558 · công thức     948.227558 · lệch 1.78e-10
+      γ = 0.5 : đo     -41.754813 · công thức     -41.754813 · lệch 1.40e-10
+      γ = 2.0 : đo    -154.971397 · công thức    -154.971397 · lệch 1.56e-11
+      γ = 0.5 : đo     -45.717054 · công thức     -45.717054 · lệch 1.49e-11
+      γ = 2.0 : đo     -97.740032 · công thức     -97.740032 · lệch 2.41e-10
+
+==============================================================================================
+18. §5 — Bổ đề 7–10 và Hình 8 tr.30: đường (T, S) của lasso
+==============================================================================================
+   Bổ đề 7 (5.16): trong một đoạn có A không đổi, μ̂(t) = μ̂(t₀) + A_A·(t − t₀)·u_A
+      đoạn 1, t =    18.04 : lệch 8.882e-16
+      đoạn 1, t =    48.10 : lệch 1.776e-15
+      đoạn 2, t =   241.19 : lệch 1.066e-14
+      đoạn 2, t =   542.97 : lệch 2.132e-14
+      đoạn 3, t =   731.25 : lệch 1.421e-14
+      đoạn 3, t =   843.86 : lệch 1.421e-14
+      đoạn 4, t =   997.45 : lệch 1.421e-14
+      đoạn 4, t =  1178.34 : lệch 2.842e-14
+
+   (5.25): t₂ − t₁ = (λ₁ − λ₂)·A_A⁻², tức Ĉ(t) giảm TUYẾN TÍNH với hệ số A_A²
+   đoạn | A_A²      | −dĈ/dt đo được | lệch
+      1 | 1.000000 |    1.000000    | 4.66e-15
+      2 | 0.723078 |    0.723078    | 3.33e-16
+      3 | 0.607470 |    0.607470    | 1.11e-16
+      4 | 0.513960 |    0.513960    | 1.11e-16
+      5 | 0.217506 |    0.217506    | 1.53e-15
+
+   Hình 8 tr.30: *The (T, S) curve is a decreasing, convex, quadratic spline*
+      12 điểm gãy (T, S): (0, 2621009) · (889, 1527165) · (1537, 1308934) · (2196, 1269390) · (3460, 1263986)
+      S có giảm đơn điệu không? CÓ ; T có tăng đơn điệu không? CÓ
+      đạo hàm cấp hai theo sai phân: nhỏ nhất 3.2782e-03 -> LỒI trên cả đường
+
+      *dashed arrow is tangent at t = 1000, negative slope R_t, (5.31)*
+      Ṡ(T) tại t = 1000 : đo -517.955512 · công thức −2Ĉ = -517.955512 · lệch 5.00e-12
+      S tại t = 1000 : 1463282.9944 ; T = 1000 ; Ĉ(1000) = 258.977756
+      S̈(T) tại t = 1000 : công thức 2·A_A² = 1.027920 · đo bằng sai phân 1.027920
+
+   Bổ đề 10 (5.37): R(d) = −Ṡ(0)/Ṫ(0) ≤ 2Ĉ với MỌI hướng d — thử 20000 hướng ngẫu nhiên:
+      R(d) lớn nhất trong 20000 hướng: 436.347825 ; 2Ĉ = 517.955512 ; vượt trần? KHÔNG
+      R(d) theo đúng hướng cách đều góc u_A: 517.955589 -> đạt ĐÚNG trần 2Ĉ = 517.955512.
+
+   Bài báo tr.31 viết: *Using Lemmas 3 and 4 it can be shown that the (T, S) curve
+   is always convex*. Bổ đề 3 nói về tính liên tục dưới điều kiện nón dương; Bổ đề 4
+   nói về DẤU của biến mới vào. Hai bổ đề thật sự cho tính lồi là Bổ đề 7 và Bổ đề 9:
+   Ṡ(T) = −2Ĉ(T), và Ĉ(T) giảm — đúng hai thứ vừa đo ở trên.
+
+==============================================================================================
+19. §6 — Ràng buộc I–III và các tỉ số (6.19)–(6.22)
+==============================================================================================
+   Tại bước 7 của đường LARS–Stagewise, u_A nằm NGOÀI nón lồi C_A.
+      A  = [2, 3, 4, 5, 7, 8, 9, 10] -> A_A = 0.26851128 ; w_A có 2 thành phần ÂM
+      B̂  = [2, 4, 5, 8, 9, 10] -> A_B̂ = 0.31359291
+      Bổ đề 5 đòi A ⊆ B thì A_A ≥ A_B; ở đây B̂ ⊆ A nên A_B̂ ≥ A_A: 0.31359291 ≥ 0.26851128 -> ĐÚNG
+
+   (6.9): hình chiếu của u_A vào L(X_B̂) bằng (A_A/A_B̂)·u_B̂
+      lệch = 8.049e-16 ; Cos = A_A/A_B̂ = 0.85624153 ; u_A'u_B̂ đo được = 0.85624153
+
+   Ràng buộc II (6.6): x_j'v_B̂ = A_B̂² với j ∈ B̂ ; Ràng buộc III (6.7): ≥ A_B̂² với j ∈ A − B̂
+      biến 2  ∈ B̂ : x_j'v_B̂ = 0.09834052  =  A_B̂² = 0.09834052
+      biến 3  ∈ A−B̂: x_j'v_B̂ = 0.10293343  ≥  A_B̂² = 0.09834052
+      biến 4  ∈ B̂ : x_j'v_B̂ = 0.09834052  =  A_B̂² = 0.09834052
+      biến 5  ∈ B̂ : x_j'v_B̂ = 0.09834052  =  A_B̂² = 0.09834052
+      biến 7  ∈ A−B̂: x_j'v_B̂ = 0.17252342  ≥  A_B̂² = 0.09834052
+      biến 8  ∈ B̂ : x_j'v_B̂ = 0.09834052  =  A_B̂² = 0.09834052
+      biến 9  ∈ B̂ : x_j'v_B̂ = 0.09834052  =  A_B̂² = 0.09834052
+      biến 10 ∈ B̂ : x_j'v_B̂ = 0.09834052  =  A_B̂² = 0.09834052
+
+   (6.19)–(6.22): so tốc độ giảm của S và của Ĉ giữa hai hướng
+      −∂S/∂γ theo u_A  (LARS)      : 513.682634
+      −∂S/∂γ theo u_B̂  (Stagewise) : 439.836405
+      (6.20) tỉ số Stage/LARS = 0.85624153 ; A_A/A_B̂ = 0.85624153 ; lệch 2.11e-15
+      (6.21) −∂Ĉ/∂γ theo u_A  = 0.26851128 (= A_A  = 0.26851128)
+             −∂Ĉ/∂γ theo u_B̂ = 0.31359291 (= A_B̂ = 0.31359291)
+      (6.22) tỉ số LARS/Stage = 0.85624153 = A_A/A_B̂ ; lệch 4.33e-15
+      -> LARS giảm S nhanh hơn Stagewise 1.1679 lần, nhưng giảm Ĉ CHẬM hơn đúng bấy nhiêu.
+      Bài báo tr.39: *it being more accurate to describe Stagewise as striving to
+                      minimize the maximum absolute residual correlation*
+
+==============================================================================================
+20. §7 Chi phí: O(m³ + nm²) — bản cập nhật Cholesky, và trường hợp m ≫ n
+==============================================================================================
+   Bản Cholesky cho cùng đường không? lệch 3.274e-11 trên 10 bước
+   Trên m = 64: 64 bước, lệch 9.117e-06
+
+   Bài báo tr.39: *The entire sequence of steps in the LARS algorithm with m < n
+                  variables requires O(m³ + nm²) computations — the cost of a least
+                  squares fit on m variables.*
+
+   Cách kiểm ĐÚNG là ĐẾM PHÉP TÍNH, không phải bấm đồng hồ: một vòng lặp Python bị
+   chi phí thông dịch át mất phần số học. Đếm phép nhân-cộng theo đúng mô tả §7:
+      · mỗi bước k: (m − k) tích vô hướng độ dài n  -> (m − k)·n
+      · cập nhật Cholesky hạng 1                     -> k²/2 + O(k)
+      · hai phép giải tam giác để lấy G_A⁻¹·1       -> k²
+      · dựng u_A = X_A w_A và a = X'u_A              -> n·k + n·m
+
+      n     | m    | LARS (phép)  | OLS (phép)   | LARS/OLS | m gấp đôi -> LARS ×
+      2000 |   20 | 1.6043e+06 | 8.0267e+05 |    2.00  | —
+      2000 |   40 | 6.4332e+06 | 3.2213e+06 |    2.00  | 4.01
+      2000 |   80 | 2.5861e+07 | 1.2971e+07 |    1.99  | 4.02
+      2000 |  160 | 1.0447e+08 | 5.2565e+07 |    1.99  | 4.04
+      2000 |  320 | 4.2606e+08 | 2.1572e+08 |    1.98  | 4.08
+      -> tỉ số LARS/OLS dừng lại quanh 1.98 chứ không tăng theo m: đó chính là nghĩa
+         của câu *the same order of magnitude as ordinary least squares*.
+
+   Đo đồng hồ để đối chiếu — n lớn cho phần số học át được chi phí thông dịch:
+      n      | m    | LARS Cholesky | LARS giải lại  | OLS đầy đủ | LARS/OLS
+      20000 |   40 |     0.0486 s  |     0.0843 s  |   0.0095 s |    5.1 lần
+      20000 |   80 |     0.2210 s  |     0.4984 s  |   0.0358 s |    6.2 lần
+      20000 |  160 |     0.8020 s  |     2.9100 s  |   0.1246 s |    6.4 lần
+      (hai bản LARS cho cùng đường: lệch 2.93e-14)
+
+   §7 tr.40: *LARS terminates at the saturated least squares fit after n − 1
+             variables have entered the active set*
+      n = 40  m = 300  :  49 bước · số biến khác 0 NHIỀU NHẤT = 39 (n − 1 = 39)
+                          số biến TỪNG vào mô hình = 42 (> n − 1: có)
+      n = 60  m = 1000 : 101 bước · số biến khác 0 NHIỀU NHẤT = 59 (n − 1 = 59)
+                          số biến TỪNG vào mô hình = 75 (> n − 1: có)
+
+==============================================================================================
+21. §8 Boosting — Stagewise trên một tập hàm cơ sở lớn
+==============================================================================================
+   §8 tr.40–41 là mục DUY NHẤT của bài báo không có một con số nào, và nó nói rõ
+   mình là phỏng đoán: *conjectured that this may help explain the success of the
+   Forward Stagewise process used in least squares boosting*.
+
+   Dựng đúng bối cảnh đó ở quy mô nhỏ: bộ học cơ sở là các GỐC CÂY (stump) 1 chiều.
+      n = 120 điểm, m = 60 gốc cây (mỗi gốc là một ngưỡng chia)
+      hạng của ma trận thiết kế: 60 ; số điều kiện 4.208e+01
+      ε = 0.2000  (    127 bước): lệch lớn nhất với đường lasso 0.719902 (thang hệ số 2.099)
+      ε = 0.0500  (    507 bước): lệch lớn nhất với đường lasso 0.177114 (thang hệ số 2.099)
+      ε = 0.0125  (   2026 bước): lệch lớn nhất với đường lasso 0.031938 (thang hệ số 2.099)
+      -> ε càng nhỏ, đường boosting bình phương tối thiểu càng sát đường LASSO.
+      Đó đúng là nội dung phỏng đoán của §8 — và bài báo KHÔNG đo nó lần nào.
+
+==============================================================================================
+22. Chọn thiết bị — đo CPU và GPU cho CHÍNH phép tính của bài
+==============================================================================================
+   Số luồng BLAS đặt cứng bằng 1 (biến môi trường, đặt trước khi nạp numpy).
+   Phép tính nặng nhất của LARS là X'r (n×m) và giải hệ k×k. Đo cả hai thiết bị:
+      cỡ (n × m)   | numpy CPU  | torch CUDA | GPU nhanh hơn
+        442 × 10    |   0.0014 ms |   0.0132 ms | 0.11×
+        442 × 64    |   0.0036 ms |   0.0111 ms | 0.32×
+       2000 × 500   |   0.1556 ms |   0.0340 ms | 4.58×
+       8000 × 4000  |   8.4917 ms |   0.7582 ms | 11.20×
+      -> cỡ bài toán của GĐ 1 (442×10 và 442×64) nằm hẳn trong vùng CPU thắng.
+      Số luồng torch đặt cứng: 1
+
+==============================================================================================
+23. MẢNG cho script vẽ hình — in ĐỦ CHỮ SỐ để khối mã trong bài dán thẳng
+==============================================================================================
+   Vì sao phải in: hình nào VẼ NHỮNG CON SỐ thì khối mã trong bài nên dán thẳng mảng,
+   để `regen.py` dựng lại hình trong vài giây thay vì chạy lại cả phép đo.
+
+   df10 = [
+       0.9626394119323122, 2.0838681560558876, 2.8964655750846005, 3.9745861473434734, 4.8370680925234915, 5.756363075530417,
+       6.609884404884125, 7.586668098713742, 8.697189067358309, 10.08328952369671,
+   ]
+   se10 = [
+       0.07267620788047585, 0.1303442562425645, 0.11687749484606942, 0.09950925774330967, 0.09948264527166381, 0.07455407498332303,
+       0.12344261727610725, 0.14544018423521277, 0.16488380072704717, 0.14552895413275152,
+   ]
+   K64 = [
+       1.0, 4.0, 7.0, 10.0, 13.0, 16.0, 19.0, 22.0, 25.0, 28.0, 31.0, 34.0,
+       37.0, 40.0, 43.0, 46.0, 49.0, 52.0, 55.0, 58.0, 61.0, 64.0,
+   ]
+   df64 = [
+       0.9184276721576267, 4.123928132236446, 7.025050709352413, 10.130360982340857, 12.94850254008435, 15.800020455549076,
+       18.709049540931012, 21.5429314261086, 24.32115577239908, 26.964381637815688, 29.78909610102815, 32.57381709645876,
+       35.27402767107544, 38.04927227526457, 40.63874798438391, 43.39121718170785, 46.21065414381041, 49.15659331116208,
+       52.35200449334537, 55.73711384050036, 59.20610967788954, 63.53479562130559,
+   ]
+   se64 = [
+       0.06241106851223841, 0.15529491040040283, 0.15441617200028973, 0.1761963272825003, 0.1881440319456216, 0.154697142741991,
+       0.1936298925761718, 0.2399923571000519, 0.2456561825993646, 0.2943351984918918, 0.29981191920806727, 0.28462659101162546,
+       0.32112996526608145, 0.30160150385999035, 0.34027278726413, 0.39114219835225034, 0.38359475694981965, 0.3868975161583985,
+       0.37631916388591385, 0.42079963147802435, 0.42030423362016994, 0.3843495497036518,
+   ]
+   Cp10 = [
+       451.72439585243205, 416.0290990203355, 141.79784615368544, 84.74019607957268, 31.69492969416592, 19.505599141908647,
+       16.326752944624047, 6.87745079283394, 7.131134315067243, 8.842818517775129, 8.999999999999318,
+   ]
+   Cp64 = [
+       483.01779975642194, 446.00261711330563, 162.09923690295034, 102.97370672400143, 62.25868206827761, 56.13264296495191,
+       55.89647101419581, 47.76315559871239, 48.40136756892156, 46.83347339528689, 44.61053546415087, 24.83953936665324,
+       23.063090355561314, 19.86085846009979, 18.52852042215892, 16.200264094219392, 17.83438734594864, 19.090842719861712,
+       19.627720616513102, 21.134815060609924, 23.081667027472406, 24.306476103023726, 26.083256325759976, 26.96446268605831,
+       28.063302423480934, 29.820392723963266, 30.876810621534787, 31.15739715056145, 32.75546874163234, 33.532437685059676,
+       35.519280866496956, 36.40322952040407, 34.05995057686505, 33.15599172137149, 30.21386211337517, 27.310184697722605,
+       29.24229864711873, 29.615836408942698, 29.359056995840604, 31.146134150827436, 29.849755044675362, 31.708895805707584,
+       32.183116942471486, 34.04255693211883, 35.984634279864906, 37.174051663381476, 38.21492279066115, 40.109036910672444,
+       41.744035512056826, 42.18977320082627, 43.444470422921995, 45.29818487078222, 46.346092826292136, 46.931674174243994,
+       48.529010395402224, 48.99854396574949, 50.695394804752766, 52.48290882074565, 53.85712289809453, 55.730280801809386,
+       57.06821731543931, 58.27349242405313, 60.16648726557992, 61.00352338952126, 62.9999999999996,
+   ]
+   pe_lar = [
+       0.0, 0.16137326080068815, 0.7410025520685758, 0.8867110557927856, 0.9350087550592083, 0.9499846647152862,
+       0.9576921960697135, 0.961458250035188, 0.9636565167276252, 0.9655683013856813, 0.9663587533276058, 0.9664215946576782,
+       0.9661503758712067, 0.9654225353654488, 0.9640054497548314, 0.9626560941512722, 0.9613381404251197, 0.9596821500093218,
+       0.9578209438065511, 0.9555312256565532, 0.953829856691638, 0.9516619196783792, 0.9493813851697237, 0.9473947158962684,
+       0.944808642708031, 0.942532379020172, 0.9399211919494506, 0.9376799909928732, 0.9347056063648586, 0.9322551935841894,
+       0.92888660295163, 0.9262251093004045, 0.9234794153767786, 0.9200382777157533, 0.917162824402744, 0.9142059979443059,
+       0.9113782309499264, 0.9090176699056954, 0.90635004834155, 0.9029951292396702, 0.8998684502813599,
+   ]
+   pe_lasso = [
+       0.0, 0.16137326080068815, 0.7410025520685758, 0.8867110557927856, 0.9350087550592083, 0.9499846647152862,
+       0.9576921960697135, 0.9614400803090214, 0.9636134646553534, 0.9655355499950666, 0.9662947328926659, 0.9664044544782391,
+       0.9661602846741324, 0.9654263280071708, 0.9640803682703529, 0.9627765528151508, 0.9614611230281151, 0.9599259226388019,
+       0.95816009017857, 0.9561762196016724, 0.9544014720077297, 0.9528017238420513, 0.950522618801289, 0.9484176370486099,
+       0.9463630446934185, 0.9442225225666627, 0.9420607607927226, 0.9396949756693962, 0.9375758627701591, 0.935133210173877,
+       0.9328533035033751, 0.9305242608093822, 0.9280701859746268, 0.9256971715638999, 0.9232161351710918, 0.9206081881532522,
+       0.9182239371560565, 0.9161123746440438, 0.913886500003819, 0.9113732428732785, 0.9093210906935684,
+   ]
+   pe_stage = [
+       0.0, 0.16137326080068815, 0.7410025520685758, 0.8867110557927856, 0.9350087550592083, 0.9499840971226687,
+       0.9576912805244342, 0.9614686599091726, 0.9635251843438235, 0.9655947769729758, 0.9663695466621641, 0.9665137898860617,
+       0.9663243113102569, 0.9657666868765616, 0.9645333747845557, 0.9635824702787835, 0.9621141891420484, 0.9607368508067836,
+       0.9594665228566375, 0.9578473015979266, 0.9561974147949506, 0.9546738175677503, 0.9528911186828534, 0.9511996861095068,
+       0.9493604565502447, 0.9474698940539311, 0.9454835037929022, 0.9433090955182284, 0.9414471887306022, 0.9391338237569948,
+       0.937429632502935, 0.9353875743740392, 0.9334003400713742, 0.9310364538337607, 0.9285904200248525, 0.9264561485738453,
+       0.9240994742513574, 0.921777964408827, 0.9198064748549973, 0.9172320116141034, 0.9150617103413135,
+   ]
+   pe_fs = [
+       0.0, 0.6972223593296433, 0.9425632100025563, 0.9560087865983492, 0.950345383351585, 0.9446973008912662,
+       0.9357902713259486, 0.9299300087723165, 0.9222093416690079, 0.915919906000439, 0.9101383405292719, 0.9048849248621356,
+       0.8991327651703804, 0.8939620571742349, 0.8898345391015936, 0.8860798767522493, 0.8823185757173988, 0.8788436064135609,
+       0.8754819561475565, 0.8725808590290292, 0.8698701757653601, 0.8670366043797304, 0.8642586531316633, 0.8618924310041476,
+       0.8601317550832228, 0.8580451195277611, 0.8558467400971653, 0.8538709460558905, 0.8513724244952986, 0.8493424429577768,
+       0.8476798551333508, 0.8457922216722076, 0.8441174907694274, 0.8424221616512232, 0.8402995083679639, 0.838385814882017,
+       0.8368641685799239, 0.8351872297567746, 0.8335009276490701, 0.8315077280578658, 0.8298674871053177,
+   ]
+   pe_sd_lar = [
+       0.0, 0.10073285876923689, 0.10789147513603316, 0.054496970677128796, 0.03538153852684438, 0.026091836456359953,
+       0.022508801690708034, 0.021275547435047885, 0.01998331144348188, 0.017926525845322124, 0.016769326684056857, 0.016119133769422176,
+       0.015906472970491848, 0.015545471239661608, 0.01555847665084218, 0.015152927440251375, 0.015058925907182295, 0.015307847666781218,
+       0.015328259659380443, 0.015031126999257466, 0.015086454536766417, 0.015391092129780754, 0.01604804399043123, 0.016081781838553355,
+       0.01615365841910121, 0.016399082484252963, 0.016263111791931687, 0.016316186523168314, 0.01679884702322542, 0.01724328117076876,
+       0.017398788320719942, 0.017661327999642453, 0.018414299873111765, 0.018812274656518267, 0.01922733707726031, 0.019758383389068847,
+       0.01986770799186052, 0.02052066078224579, 0.02021624304918996, 0.021006755132725888, 0.021922781236303087,
+   ]
+   rho = [
+       0.06332340658933504, 0.4907357695538847, 0.3021055872663274, 0.5882932706030122, 0.3177236980040751, 0.22323214020969445,
+       0.7102700478790898, 0.7258650199952871, 0.0710721109996991, 0.9999999999999966,
+   ]
+   ve_trai_320 = [
+       0.30174599602085383, 0.10822872766909852, 0.06274549583049804, 0.0125705398921373, 0.01382712633977834, 0.008815043969504055,
+       0.00117392379690473, 0.00015877310695899816, 0.0020305496913188836, -7.771561172376096e-16,
+   ]
+   delta_R2 = [
+       0.04217776420452635, 0.30907878776564135, 0.0660803826640356, 0.061590873697595305, 0.015876628878104482, 0.005794679233685929,
+       0.012810775005050457, 0.0019539765120778485, 0.00032260034371911495, 0.0020619539159140166,
+   ]
+   t_sklearn_m64 = [
+       0.0, 60.1214750235502, 663.677277169726, 888.9103724025014,
+       1126.120269489921, 1189.0416155291853, 1207.7435535565635, 1299.1928663080375,
+       1312.4462919332232, 1348.3723601986455, 1393.3789236795608, 1673.6185946418886,
+       1734.7223802194007, 1829.5617422063792, 1899.2825317368047, 2005.4083348675529,
+       2015.476395744373, 2036.4601652219487, 2079.80907785559, 2095.0452585810376,
+       2096.7065697333987, 2121.309084968744, 2128.5246174458125, 2165.5850662237117,
+       2196.612838373706, 2205.171950949528, 2239.2615642209566, 2304.504153829237,
+       2320.3204471312383, 2369.6351683285475, 2370.1752972460495, 2416.738037801286,
+       2623.277684578713, 2837.7329402121663, 3359.4325731364115, 4262.752020966694,
+       5097.477557735323, 6040.063408316129, 6044.390937411112, 7576.873051794487,
+       7946.17704658458, 8342.633278497613, 8547.46234822361, 9407.524795570302,
+       9551.241842340367, 9788.65504666065, 9905.823121178146, 26516.263589669405,
+       29699.040525424956, 31886.991449373112, 34641.25794635025, 38655.346464239214,
+       711710.5841107705, 730419.8707795265, 861688.1974558488, 995252.0924681488,
+       1084639.9989504614, 1174733.5630596422, 1716271.4924760042, 1981833.6287053244,
+       2583532.6725065387, 3703141.7337110867, 4896460.137759019, 6166288.491422887,
+       7515350.404886608, 8719371.663606089, 12403013.831120484, 19374457.155307528,
+       32576429.76093867, 57592949.31625065, 104963389.17770821, 192752199.68051758,
+       264030758.91954425, 332995714.3467052, 551930055.4129021, 787979128.6863209,
+       1106222693.693405, 1350473049.1796327, 2390899259.836304, 5884986356.15757,
+       17307963207.047333, 80961753586.21469, 111492149728.54433, 163899477817.6517,
+       254128422542.19437, 409978269485.34247, 677103152678.9431, 1351269086489.0488,
+       1522789003169.4453, 1742424842771.4412, 2024668512295.3086, 2775243373875.047,
+       3089496328827.9497, 4132626850754.71, 31193131928260.58, 165016534594922.72,
+       837676212964990.6,
+   ]
+   t_tuviet_m64 = [
+       0.0, 60.12147502355026, 663.6772771697242, 888.9103724025027,
+       1126.120269489921, 1189.041615529185, 1207.7435535565635, 1299.1928663080407,
+       1312.446291933223, 1348.3723601986464, 1393.3789236795615, 1673.6185946418966,
+       1734.7223802194076, 1829.5617422063815, 1899.2825317368063, 2005.4083348675545,
+       2015.4763957443774, 2036.4601652219505, 2079.8090778555948, 2095.0452585810467,
+       2096.7065697334015, 2121.3090849687537, 2128.52461744581, 2165.5850662237344,
+       2196.6128383737223, 2205.1719509495288, 2239.2615642209585, 2304.5041538292535,
+       2320.3204471312433, 2369.635168328564, 2370.1752972460545, 2416.7380378012813,
+       2623.277684578714, 2780.2293738860585, 3095.4173272705893, 3498.975653841426,
+       3505.5953709508426, 3660.0981872935445, 3945.457449257873, 3975.140561021034,
+       4507.522079711507, 4533.093478968402, 4838.293567987702, 4868.723594964758,
+       4881.239406592338, 5063.159515974014, 5300.611324460319, 5327.9835062871425,
+       5424.141089534058, 5888.92425907084, 6151.534849209468, 6209.931632425568,
+       6838.472824258632, 8321.51110626716, 8831.552188998381, 10804.882350194897,
+       11280.737297921381, 11644.59752319078, 12693.619537006245, 13079.715894708757,
+       15596.432683421892, 23807.04725219137, 25117.63965585761, 53974.302717723775,
+       59899.896543446455,
+   ]
+   vi_pham_theo_co = [
+       0.0, 0.0, 6.0, 37.0, 96.0, 126.0, 98.0, 44.0, 10.0, 1.0,
+   ]
+   tong_theo_co = [
+       10.0, 45.0, 120.0, 210.0, 252.0, 210.0, 120.0, 45.0, 10.0, 1.0,
+   ]
+
+   Hai mảng cuối: số tập con VI PHẠM (4.11) và TỔNG số tập con, theo cỡ 1..10.
+
+==============================================================================================
+24. VÍ DỤ CHẠY TAY — hai biến, in lại TỪNG BƯỚC của (2.8)–(2.13)
+==============================================================================================
+   Bốn quan sát, hai cột. Cột đã tâm hoá và có chuẩn Euclid bằng 1 — quy ước (1.1).
+   X =
+        [-0.707107, +0.000000]
+        [+0.000000, -0.707107]
+        [+0.707107, +0.000000]
+        [+0.000000, +0.707107]
+   y = [-2.121320, -0.707107, +2.121320, +0.707107]
+   kiểm quy ước (1.1): Σy = 0.0e+00 · Σx_{i1} = 0.0e+00 · Σx_{i1}² = 1.000000 · Σx_{i2}² = 1.000000
+   hai cột có TRỰC GIAO không? x₁ᵀx₂ = 0.0e+00
+
+   ── BƯỚC 1 ──
+   (2.8)  ĉ = Xᵀ(y − μ̂) = [+3.000000, +1.000000]
+   (2.9)  Ĉ = max|ĉ_j| = 3.000000  ->  A = {1}
+   (2.10) s_j = dấu(ĉ_j) = [+1]
+   (2.5)  G_A = [[1.]]
+          A_A = (1ᵀG_A⁻¹1)^(−1/2) = 1.000000
+   (2.6)  w_A = A_A·G_A⁻¹·1 = [1.000000]
+          u_A = X_A·w_A = [-0.707107, +0.000000, +0.707107, +0.000000]
+   (2.7)  kiểm: X_Aᵀu_A = [1.000000] phải bằng A_A·1 = 1.000000 ; ‖u_A‖ = 1.000000
+   (2.11) a = Xᵀu_A = [+1.000000, +0.000000]
+   (2.13) j = 2, Ĉ−ĉ / A−a = (2.000000)/(1.000000) = 2.000000  <- hợp lệ
+   (2.13) j = 2, Ĉ+ĉ / A+a = (4.000000)/(1.000000) = 4.000000  <- hợp lệ
+   (2.12) γ̂ = 2.000000 ; μ̂ ← μ̂ + γ̂·u_A
+          β̂ = [2.000000, 0.000000] ; Σ|β̂| = 2.000000
+   (2.16) tương quan chung mới: Ĉ − γ̂·A_A = 1.000000 ; đo lại = 1.000000
+
+   ── BƯỚC 2 ──
+   (2.8)  ĉ = Xᵀ(y − μ̂) = [+1.000000, +1.000000]
+   (2.9)  Ĉ = max|ĉ_j| = 1.000000  ->  A = {1, 2}
+   (2.10) s_j = dấu(ĉ_j) = [+1, +1]
+   (2.5)  G_A = [[1. 0.]  [0. 1.]]
+          A_A = (1ᵀG_A⁻¹1)^(−1/2) = 0.707107
+   (2.6)  w_A = A_A·G_A⁻¹·1 = [0.707107, 0.707107]
+          u_A = X_A·w_A = [-0.500000, -0.500000, +0.500000, +0.500000]
+   (2.7)  kiểm: X_Aᵀu_A = [0.707107, 0.707107] phải bằng A_A·1 = 0.707107 ; ‖u_A‖ = 1.000000
+   (2.11) a = Xᵀu_A = [+0.707107, +0.707107]
+   (2.13) không còn biến ngoài -> quy ước tr.10: γ̂ = Ĉ/A_A = 1.414214
+   (2.12) γ̂ = 1.414214 ; μ̂ ← μ̂ + γ̂·u_A
+          β̂ = [3.000000, 1.000000] ; Σ|β̂| = 4.000000
+   (2.16) tương quan chung mới: Ĉ − γ̂·A_A = 0.000000 ; đo lại = 0.000000
+
+   Nghiệm OLS của bài toán này: [3.000000, 1.000000]
+   LARS dừng ở      : [3.000000, 1.000000] -> lệch 4.44e-16
+   sklearn cho     : [[0. 2. 3.]
+                      [0. 0. 1.]]
+   Hai cột vuông góc nên γ̂₁ đưa β̂₁ tới đúng chỗ β̂₁ = β̂₂ về tương quan;
+   bước 2 đi theo đường phân giác và tới thẳng nghiệm OLS — đúng Hình 2 tr.6.
+
+==============================================================================================
+25. CÁC CON SỐ DẪN XUẤT mà bài viết trích — in ra thay vì để người viết tự quy đổi
+==============================================================================================
+   Bài học Đợt 24: một con số TÓM TẮT một bảng cũng phải do script in ra.
+
+   ρ_k đổi sang phần trăm (bảng ở mục 4 của bài):
+      ρ_1 = 0.063323 -> 6.33 % quãng đường Forward Selection sẽ đi
+      ρ_8 = 0.725865 -> 72.59 % (lớn nhất trước bước cuối)
+
+   Mô phỏng §3.3 — các con số bài viết trích trong văn xuôi:
+      khoảng cách ba đường LARS/Lasso/Stagewise tại k = 40 : 0.015193
+      pe trung bình tại k = 40: LARS 0.8999 · Forward Selection 0.8299
+      pe trung bình tại k = 3 : LARS 0.8867 · Forward Selection 0.9560
+      độ lệch chuẩn trung bình của LARS: 0.022894 -> làm tròn 0.0229
+      sai số chuẩn của trung bình trên 100 lần: 0.0023
+      chênh giữa đỉnh đo được và 0,963 của bài báo: 0.0034
+
+   A_A của tập đầy đủ 10 biến, LẤY DẤU TỪ ĉ tại μ̂ = 0 (khác bảng quét mọi tập con):
+      A_A = 0.43474097 ; còn bảng quét dấu dương cho 0.153899
+
+==============================================================================================
+TỔNG: chạy hết trong 24.01 giây.
+==============================================================================================

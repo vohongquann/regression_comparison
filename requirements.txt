@@ -1,6 +1,8 @@
-joblib>=1.2.0
-numpy>=1.23.0
-pandas>=1.5.0
-tensorflow>=2.11.0
-matplotlib>=3.6.0
-scikit-learn>=1.2.0
+numpy>=1.26
+pandas>=2.0
+scipy>=1.11
+scikit-learn>=1.5
+matplotlib>=3.8
+# chỉ cho checks/ (đọc PDF và ảnh)
+pypdfium2>=4
+pillow>=10

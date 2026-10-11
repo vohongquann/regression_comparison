@@ -1,0 +1,825 @@
+
+============================================================================================
+1. Định nghĩa (M) tr.74 · rho và psi tr.75 · ví dụ số chạy tay
+============================================================================================
+Định nghĩa (M) tr.74:  T = T_n(x_1,...,x_n) cực tiểu hoá  sum_i rho(x_i - T),
+trong đó rho là một hàm KHÔNG hằng. Ba thành viên tr.74:
+    rho(t) = t^2        -> trung bình mẫu
+    rho(t) = |t|        -> trung vị mẫu
+    rho(t) = -log f(t)  -> hợp lý cực đại
+
+rho bền vững nhất, in nguyên văn ở tr.75 và lặp lại ở tr.79 mục (iii):
+    rho(t) = 1/2 t^2        với |t| <= k
+    rho(t) = k|t| - 1/2 k^2 với |t| >  k
+
+Ví dụ chạy tay — 5 quan sát, k = 1.345 (thang đo đặt bằng 1 cho gọn):
+   x = 1, 2, 4, 5, 25
+
+  trung bình mẫu   = 7.4000000000
+  trung vị mẫu     = 4.0000000000
+  T Huber (k=1.345) = 3.8275000000
+
+  x_i        r = x_i - T    psi(r)         rho(r)         trong ngưỡng?
+  1          -2.8275000000  -1.3450000000  2.8984750000   KHÔNG
+  2          -1.8275000000  -1.3450000000  1.5534750000   KHÔNG
+  4          0.1725000000   0.1725000000   0.0148781250   có
+  5          1.1725000000   1.1725000000   0.6873781250   có
+  25         21.1725000000  1.3450000000   27.5725000000  KHÔNG
+  tổng psi(r_i) = -0.00000000000000   (điều kiện dừng của bài báo: bằng 0)
+
+Nghiệm này có DẠNG ĐÓNG, giải được trên giấy. Ở nghiệm có m1 điểm dưới
+ngưỡng, m2 điểm trong ngưỡng, m3 điểm trên ngưỡng, nên điều kiện dừng thành
+    sum_{trong} (x_i - T) + (m3 - m1) k = 0   ->   T = (sum_{trong} x_i
+                                                        + (m3 - m1) k) / m2
+  ngưỡng [T-k, T+k] = [2.482500, 5.172500]
+  m1 = 2 (dưới)  ·  m2 = 2 (trong: 4, 5)  ·  m3 = 1 (trên)
+  T = (9 + (1 - 2)·1.345) / 2 = 7.655000 / 2 = 3.8275000000
+  lệch so với nghiệm lặp: 4.441e-16
+
+Kiểm tính chất Winsor hoá tr.79 mục (iii): thay mọi x_i ngoài [T-k, T+k]
+bằng T ± k thì T KHÔNG đổi, và T bằng đúng trung bình cộng của mẫu đã sửa.
+  mẫu đã Winsor hoá = 2.4825000000, 2.4825000000, 4.0000000000, 5.0000000000, 5.1725000000
+  trung bình cộng   = 3.82750000000000
+  lệch so với T     = 0.000e+00
+
+Kiểm hai trường hợp giới hạn tr.75: 'Sample mean (k = infinity) and sample
+median (k = 0) are limiting cases corresponding to eps = 0 and eps = 1'
+  k -> vô cùng   k = 10000     T = 7.4000000000   mốc = 7.4000000000   lệch = 0.00e+00
+  k -> 0         k = 0.0001    T = 4.0000000000   mốc = 4.0000000000   lệch = 0.00e+00
+
+============================================================================================
+2. Công thức (1) tr.78 — phương sai tiệm cận và cận Cramér-Rao
+============================================================================================
+Công thức (1) tr.78:
+    V(psi, F) = E psi^2 / (E psi')^2 = int psi^2 f dt / [int psi (f'/f) f dt]^2
+              >= 1 / int (f'/f)^2 f dt
+'We have strict equality unless psi = -p f'/f, for some constant p.'
+
+Ý nghĩa: tử số đo mức DAO ĐỘNG mà mỗi quan sát bơm vào ước lượng; mẫu số đo mức
+NHẠY của phương trình ước lượng khi dịch tham số. Một psi tốt phải vừa ít dao
+động vừa nhạy — và bất đẳng thức nói rằng không ai vượt được thông tin Fisher.
+
+Kiểm bằng số dưới F = Phi, với psi = clip(t, -k, k):
+  k      E psi^2        E psi'         V              V >= 1?       
+  0.500  0.1851283651   0.3829249225   1.2625416081   có
+  1.000  0.5160585510   0.6826894921   1.1072674722   có
+  1.345  0.7101645483   0.8213747654   1.0526312912   có
+  2.000  0.9205369256   0.9544997361   1.0103912784   có
+  5.000  0.9999988921   0.9999994267   1.0000000387   có
+  20.000 1.0000000000   1.0000000000   1.0000000000   có
+
+Thông tin Fisher của Phi bằng 1, nên cận dưới là 1. Đẳng thức chỉ đạt khi
+psi(t) = t, tức k = vô cùng — đúng câu 'unless psi = -p f'/f' của bài báo,
+vì -phi'/phi = t.
+
+============================================================================================
+3. Mục 4 tr.78-79 — bốn ví dụ và phương sai tiệm cận của chúng dưới Phi
+============================================================================================
+(i)   rho = t^2       -> trung bình mẫu,  V = int t^2 F(dt)
+(ii)  rho = |t|       -> trung vị mẫu,    V = 1 / (2 F'(0))^2
+(iii) rho = Huber     -> Winsor hoá,      V = (int_{-k}^{k} t^2 F(dt)
+                                              + k^2 F(-k) + k^2 (1-F(k)))
+                                             / (int_{-k}^{k} F(dt))^2
+(iv)  rho = 1/2 t^2 rồi PHẲNG -> trung bình cắt bớt (bài báo cảnh báo rho này
+      KHÔNG lồi nên mục 2 không áp dụng được; V viết ra 'một cách hình thức')
+
+Dưới F = Phi:
+  (i)   trung bình mẫu  V = 1.0000000000
+  (ii)  trung vị mẫu    V = 1.5707963268   = pi/2 = 1.5707963268
+  (iii) Huber k=1.345   V = 1.0526312912
+  (iv)  cắt bớt k=1.345 V = 2.5837988408
+  -> cắt bớt TỆ HƠN Huber 2.4546 lần ở cùng k = 1.345
+  -> trung vị tệ hơn Huber 1.4923 lần; trung bình tốt hơn Huber 1.0526 lần
+
+Chú ý: với F = Phi, tử số và mẫu số của (iv) có cùng biểu thức, nên
+V = 1/(2Phi(k) - 1 - 2k phi(k)). Ở k = 1.345 mẫu số = 0.3870270333.
+
+Bốn nhận xét tr.79-80 của chính tác giả, đánh số (i)-(iv):
+  (i)   'The sample mean is very sensitive to the tails of F.'
+  (ii)  'The sample median is very sensitive to the behavior of F at its
+         median, and neglects its behavior elsewhere.'
+  (iii) '"Winsorizing" avoids these shortcomings and seems to be
+         practically foolproof.'
+  (iv)  'The "trimming procedure" is rather sensitive to the behavior of F
+         at the rejection points ±k.'
+
+============================================================================================
+4. Định lý 1 tr.80-81 — mật độ ít thuận lợi nhất f_0, và ba phép kiểm
+============================================================================================
+Định lý 1 tr.80-81 cho f_0 tường minh với G bất kỳ. Với G = Phi (mục 6 tr.82)
+thì t_0 = -k, t_1 = +k và f_0 thu về dạng in ở tr.75:
+    f_0(t) = (1 - eps) (2 pi)^{-1/2} e^{-rho(t)}
+tức là: hình chuông ở giữa, ĐUÔI MŨ ở hai bên.
+
+'This f_0 behaves like a normal density for small t, like an exponential density
+for large t. At least for me, this was rather surprising - I would have expected
+an f_0 with much heavier tails.'  (tr.75)
+
+Ba phép kiểm cho mỗi cặp (k, eps) khớp nhau:
+  k        eps_min    int f_0 dt       min h_0          V(psi0,F0)·I(F0)
+  0.5000   0.441711   1.000000000038   -6.284e-17       0.999999999835  
+  1.0000   0.142831   1.000000000002   -3.886e-16       0.999999999490  
+  1.3450   0.057915   0.999999999993   -9.585e-16       0.999999999986  
+  2.0000   0.008419   1.000000000004   -6.593e-15       0.999999999349  
+  2.6400   0.000975   1.000000000082   -5.695e-14       1.000000000016  
+
+Cột 3 phải bằng 1 (f_0 là mật độ). Cột 4 phải >= 0 ('it remains to check
+that its density h_0 is nonnegative', tr.81). Cột 5 phải bằng 1, vì
+tr.81 viết V(psi_0, F_0) = (int (f_0'/f_0)^2 f_0 dt)^{-1}.
+
+============================================================================================
+5. BẢNG I tr.84-85 — dựng lại toàn bộ 31 hàng × 14 cột
+============================================================================================
+Chú thích Bảng I tr.85, nguyên văn:
+  'T_n is defined by Sigma psi(x_i - T_n) = 0, where psi(t) = t for |t| < k,
+   psi(t) = k sign(t) for |t| >= k.'
+Tiêu đề: 'Upper bounds for the asymptotic variance of n^(1/2) T_n for
+          F = (1 - eps) Phi + eps H, H symmetric'
+
+Cột 'k' và 4 cột đầu dựng bằng công thức đóng; 10 cột eps dựng bằng công
+thức sup_F V của Hệ quả tr.82. In ra CHÊNH LỆCH bài báo trừ đo lại.
+
+  k     d Epsi'   d Epsi2   d epsmin  d e=0    d e=0.001 d e=0.002 d e=0.005 d e=0.01 d e=0.02 d e=0.05 d e=0.1  d e=0.2  d e=0.5 
+--------------------------------------------------------------------------------------------
+  0.0   +0.00000  +0.00000  +0.00000  -0.0002  -0.0001  +0.0001  -0.0004  -0.0003  -0.0004  -0.0005  +0.0003  +0.0004  +0.0002  
+  0.1   -0.00004  -0.00003  -0.00001  +0.0003  +0.0004  +0.0004  -0.0003  +0.0004  -0.0004  +0.0001  -0.0003  -0.0001  -0.0003  
+  0.2   +0.00002  -0.00004  +0.00004  +0.0002  +0.0002  +0.0002  +0.0003  -0.0002  +0.0003  +0.0002  -0.0002  +0.0004  -0.0000  
+  0.3   +0.00002  -0.00003  -0.00002  +0.0004  +0.0004  +0.0004  +0.0004  -0.0003  -0.0001  -0.0002  -0.0004  -0.0003  -0.0005  
+  0.4   +0.00004  -0.00001  -0.00004  +0.0001  +0.0001  +0.0001  +0.0001  +0.0002  +0.0003  -0.0002  +0.0000  -0.0001  +0.0001  
+  0.5   +0.00002  +0.00003  +0.00001  -0.0005  -0.0005  -0.0005  -0.0005  -0.0003  -0.0002  +0.0004  +0.0003  -0.0000  -0.0000  
+  0.6   -0.00001  -0.00001  -0.00001  -0.0001  -0.0001  -0.0001  -0.0000  +0.0003  -0.0004  +0.0001  -0.0003  +0.0003  -0.0001  
+  0.7   -0.00003  +0.00004  -0.00001  -0.0004  -0.0003  -0.0003  -0.0001  +0.0004  +0.0002  +0.0000  -0.0004  +0.0003  -0.0001  
+  0.8   -0.00001  -0.00004  -0.00002  +0.0001  +0.0002  +0.0003  -0.0003  -0.0005  -0.0002  -0.0003  -0.0005  +0.0004  +0.0004  
+  0.9   -0.00002  +0.00000  -0.00004  -0.0002  -0.0000  +0.0002  -0.0003  -0.0001  +0.0001  -0.0003  -0.0002  +0.0002  +0.0000  
+  1.0   -0.00001  -0.00004  +0.00003  +0.0003  -0.0005  -0.0002  -0.0003  +0.0003  -0.0005  +0.0004  +0.0002  -0.0004  -0.0002  
+  1.1   -0.00003  +0.00000  +0.00002  +0.0000  +0.0004  -0.0002  +0.0000  +0.0003  -0.0003  -0.0004  +0.0003  +0.0002  -0.0001  
+  1.2   -0.00004  +0.00001  +0.00001  -0.0002  +0.0003  -0.0002  +0.0004  +0.0004  +0.0002  -0.0002  -0.0002  -0.0000  -0.0002  
+  1.3   -0.00000  +0.00003  -0.00004  +0.0000  -0.0003  +0.0004  -0.0005  +0.0003  -0.0002  -0.0003  -0.0005  -0.0003  -0.0001  
+  1.4   -0.00001  +0.00002  -0.00002  -0.0004  +0.0004  +0.0003  -0.0001  -0.0004  +0.0000  +0.0001  +0.0001  -0.0006  -0.0002  
+  1.5   -0.00001  -0.00003  +0.00001  +0.0001  +0.0001  +0.0002  +0.0004  +0.0002  -0.0003  -0.0003  +0.0004  +0.0001  +0.0002  
+  1.6   +0.00000  +0.00003  +0.00003  +0.0003  -0.0005  -0.0002  -0.0002  -0.0004  -0.0005  +0.0003  +0.0003  -0.0003  -0.0004  
+  1.7   -0.00003  -0.00001  -0.00004  -0.0001  +0.0004  -0.0000  -0.0004  -0.0002  +0.0003  -0.0003  -0.0004  +0.0002  +0.0003  
+  1.8   +0.00004  +0.00005  +0.00001  -0.0002  -0.0004  +0.0004  -0.0001  +0.0004  -0.0001  -0.0003  +0.0002  -0.0004  -0.0002  
+  1.9   -0.00003  -0.00004  +0.00000  -0.0003  -0.0003  -0.0002  +0.0003  +0.0003  -0.0000  +0.0001  -0.0001  -0.0001  -0.0000  
+  2.0   -0.00000  +0.00004  +0.00002  +0.0004  -0.0002  +0.0002  -0.0004  +0.0004  +0.0004  -0.0002  -0.0003  +0.0000  -0.0003  
+  2.1   -0.00003  +0.00000  +0.00002  -0.0002  -0.0004  +0.0004  -0.0001  +0.0004  -0.0098  -0.0004  +0.0004  -0.0001  +0.0004  
+  2.2   -0.00001  -0.00001  +0.00002  -0.0001  -0.0000  +0.0002  -0.0002  +0.0003  +0.0000  -0.0005  -0.0002  -0.0004  +0.0004  
+  2.3   -0.00005  +0.00001  -0.00003  +0.0003  -0.0001  +0.0004  +0.0003  -0.0002  -0.0001  +0.0003  -0.0001  -0.0002  -0.0005  
+  2.4   +0.00000  +0.00005  -0.00004  +0.0002  +0.0001  +0.0001  +0.0003  +0.0000  -0.0004  -0.0002  -0.0004  -0.0005  -0.0004  
+  2.5   -0.00002  -0.00004  +0.00000  +0.0003  -0.0003  +0.0002  -0.0003  -0.0002  +0.0002  +0.0001  -0.0002  +0.0004  -0.0000  
+  2.6   -0.00002  -0.00003  +0.00002  -0.0003  -0.0004  -0.0005  -0.0005  +0.0000  -0.0005  -0.0000  +0.0003  -0.0005  -0.0000  
+  2.7   -0.00003  +0.00004  -0.00002  +0.0002  -0.0004  +0.0000  -0.0005  -0.0003  -0.0005  +0.0004  +0.0000  -0.0005  -0.0003  
+  2.8   -0.00001  +0.00003  +0.00004  -0.0002  -0.0002  -0.0003  -0.0001  -0.0002  +0.0002  +0.0003  -0.0001  +0.0003  +0.0002  
+  2.9   -0.00003  +0.00003  -0.00003  -0.0004  +0.0001  -0.0004  +0.0004  +0.0001  -0.0005  -0.0003  -0.0002  -0.0004  +0.0004  
+  3.0   +0.00000  +0.00001  -0.00005  +0.0004  -0.0005  -0.0004  +0.0001  -0.0002  +0.0003  +0.0004  -0.0003  +0.0003  +0.0004  
+--------------------------------------------------------------------------------------------
+Tổng số ô của Bảng I đã đối chiếu: 403
+Phép so CHẶT (làm tròn về đúng số chữ số in rồi so bằng nhau): 16 ô khác
+   · k=0.0 eps=0.05   in 1.741 · đo lại 1.740495 · làm tròn 1.740 · chênh -0.5 đơn vị
+   · k=0.3 eps=0.5    in 5.962 · đo lại 5.961478 · làm tròn 5.961 · chênh -0.5 đơn vị
+   · k=0.5 eps=0.002  in 1.269 · đo lại 1.268495 · làm tròn 1.268 · chênh -0.5 đơn vị
+   · k=0.5 eps=0.005  in 1.278 · đo lại 1.277497 · làm tròn 1.277 · chênh -0.5 đơn vị
+   · k=0.8 eps=0.01   in 1.188 · đo lại 1.187458 · làm tròn 1.187 · chênh -0.5 đơn vị
+   · k=0.8 eps=0.1    in 1.523 · đo lại 1.522487 · làm tròn 1.522 · chênh -0.5 đơn vị
+   · k=1.3 eps=0.005  in 1.077 · đo lại 1.076489 · làm tròn 1.076 · chênh -0.5 đơn vị
+   · k=1.3 eps=0.1    in 1.497 · đo lại 1.496458 · làm tròn 1.496 · chênh -0.5 đơn vị
+   · k=1.4 eps=0.2    in 2.180 · đo lại 2.179430 · làm tròn 2.179 · chênh -0.6 đơn vị
+   · k=2.1 eps=0.02   in 1.137 · đo lại 1.127172 · làm tròn 1.127 · chênh -9.8 đơn vị
+   · k=2.2 eps=0.05   in 1.343 · đo lại 1.342494 · làm tròn 1.342 · chênh -0.5 đơn vị
+   · k=2.4 eps=0.2    in 3.115 · đo lại 3.114470 · làm tròn 3.114 · chênh -0.5 đơn vị
+   · k=2.6 eps=0.002  in 1.018 · đo lại 1.017492 · làm tròn 1.017 · chênh -0.5 đơn vị
+   · k=2.6 eps=0.005  in 1.042 · đo lại 1.041474 · làm tròn 1.041 · chênh -0.5 đơn vị
+   · k=2.9 eps=0.02   in 1.198 · đo lại 1.197450 · làm tròn 1.197 · chênh -0.5 đơn vị
+   · k=3.0 eps=0.001  in 1.011 · đo lại 1.010470 · làm tròn 1.010 · chênh -0.5 đơn vị
+Phân bố sai số của 310 ô V, đơn vị = chữ số cuối được in:
+   trung bình -0.0762 · trung vị -0.0707 · nhỏ nhất -9.8283 · lớn nhất +0.4485
+   số ô ÂM (bài báo in CAO hơn) 174 · số ô DƯƠNG 136
+   bỏ ô lệch quá 5 đơn vị ra: trung bình -0.0447 trên 309 ô
+   con số đáng đọc là BIÊN, không phải hình dạng phân bố: bỏ đúng MỘT ô ra
+   thì mọi ô còn lại nằm trong 0.5700 đơn vị của chữ số cuối, tức trong phần
+   nửa đơn vị mà một phép làm tròn cho phép. Lệch trung bình -0.0447 đơn vị
+   là mức của việc tra bảng Phi năm chữ số năm 1963, không phải mức của sai
+   sót. Ô bị bỏ ra lệch 9.8283 đơn vị — gấp 17 lần biên của 309 ô kia.
+Số ô lệch quá nửa đơn vị chữ số cuối: 1
+   · k=2.1 eps=0.02  bài báo in 1.137  đo lại 1.127172  chênh -0.0098
+
+--- 5.1  Chỗ in sai duy nhất của Bảng I, và nó TỰ LỘ -------------------
+Cột eps = 0.020, năm hàng liền nhau k = 2.0 .. 2.4, đúng như bản in:
+   bài báo in : 1.122  1.137  1.133  1.140  1.148
+   đo lại     : 1.122441  1.127172  1.133019  1.139870  1.147626
+   sai phân của cột đã in: +0.015  -0.004  +0.007  +0.008
+   -> dãy in KHÔNG đơn điệu: tăng 0.015 rồi GIẢM 0.004 rồi tăng lại.
+
+   Đơn điệu ở đây KHÔNG phải tính chất của cả cột — V(k, eps) là hàm có một
+   cực tiểu theo k, và cực tiểu đó nằm đúng ở k thoả eps_min(k) = eps.
+   cực tiểu của cột eps = 0.020 nằm ở k = 1.717 (V = 1.116297)
+   k giải từ eps_min(k) = 0.020                = 1.717437
+   số chỗ GIẢM trên lưới 0.001 trong [1.717, 6.0]: 0 / 4283
+   -> từ cực tiểu trở đi cột tăng nghiêm ngặt, mà k = 2.0 .. 2.4 nằm trọn
+      bên phải cực tiểu, nên năm ô đó BẮT BUỘC phải tăng dần.
+   Thay 1.137 bằng 1.127 thì sai phân thành: +0.005  +0.006  +0.007  +0.008
+   -> đơn điệu trở lại. Đây là lỗi in một chữ số, không phải lỗi tính:
+      mọi ô khác của bảng khớp tới chữ số cuối.
+
+Câu của chính tác giả về bảng này, tr.82:
+  'It can be seen from the table that the performance of T_n is not very
+   sensitive to the choice of k - any value between 1.0 and 2.0 will give
+   acceptable results for all eps <= 0.2. The limiting case k = 0 is the
+   sample median.'
+
+Kiểm câu đó bằng chính bảng: với mỗi eps <= 0.2, lấy V nhỏ nhất trên k rồi
+xem k trong [1.0, 2.0] tệ hơn tối ưu bao nhiêu phần trăm.
+  eps      k tối ưu   V tối ưu     V tệ nhất      tệ hơn
+  0        3.00       1.000402     1.107267       +10.68 %
+  0.001    2.63       1.009548     1.110526       +10.00 %
+  0.002    2.44       1.017116     1.113795       +9.51 %
+  0.005    2.16       1.036725     1.123668       +8.39 %
+  0.01     1.95       1.065241     1.140344       +7.05 %
+  0.02     1.72       1.116298     1.174547       +5.22 %
+  0.05     1.40       1.256124     1.306808       +4.03 %
+  0.1      1.14       1.489854     1.664687       +11.73 %
+  0.2      0.86       2.045533     2.635003       +28.82 %
+  eps = 0.5 (ngoài phạm vi câu trên):
+  0.5      0.44       5.927703     10.801669      +82.22 %
+
+Kiểm 'k tối ưu ứng với eps' phải trùng cột eps_min: nghịch đảo eps_min.
+  eps = 0.001   k từ eps_min = 2.632880   k cực tiểu V trên lưới 0.01 = 2.63
+  eps = 0.005   k từ eps_min = 2.162534   k cực tiểu V trên lưới 0.01 = 2.16
+  eps = 0.01    k từ eps_min = 1.945111   k cực tiểu V trên lưới 0.01 = 1.95
+  eps = 0.02    k từ eps_min = 1.717437   k cực tiểu V trên lưới 0.01 = 1.72
+  eps = 0.05    k từ eps_min = 1.398377   k cực tiểu V trên lưới 0.01 = 1.40
+  eps = 0.1     k từ eps_min = 1.140171   k cực tiểu V trên lưới 0.01 = 1.14
+  eps = 0.2     k từ eps_min = 0.861592   k cực tiểu V trên lưới 0.01 = 0.86
+
+============================================================================================
+6. Mục 7 tr.83 — ba cận chệch, ba cỡ mẫu, và cận của trung vị
+============================================================================================
+Công thức (2) tr.83:
+    |c(F)| <= [eps/(1-eps)] sup|psi| / (-lambda'_G(theta c))
+Với G = Phi và thay theta c bởi 0: sup|psi| = k và -lambda'_Phi(0) = E_Phi psi'.
+
+Bài báo in ba cận:
+    |c| <= 0.17     cho eps = 0.1,   k = 1.14
+    |c| <= 0.021    cho eps = 0.01,  k = 1.95
+    |c| <= 0.0027   cho eps = 0.001, k = 2.64
+
+  eps      k in     k đo lại   |c| in       |c| đo lại  
+  0.1      1.14     1.140171   0.17         0.16985965  
+  0.01     1.95     1.945111   0.021        0.02075935  
+  0.001    2.64     2.632880   0.0027       0.00266473  
+
+Câu tr.83 về cỡ mẫu: 'if somebody wants to control the asymptotic bias and
+keep it below 1/2 n^{-1/2}, that is, below one half of the asymptotic standard
+deviation of T_n, he should not increase the sample size above n = 9, 600 and
+35,000, respectively'.
+
+Câu đó có HAI cách đọc, và chúng cho hai bộ số khác nhau:
+  (A) đọc THEO CHỮ: ngưỡng là 1/2 n^{-1/2}  ->  n <= 1/(4 c^2)
+  (B) đọc theo mệnh đề đi kèm 'one half of the asymptotic standard deviation',
+      mà độ lệch chuẩn tiệm cận là sqrt(V/n)  ->  n <= V/(4 c^2)
+Thử cả hai trên cả ba dòng rồi để tổng sai lệch chọn:
+
+  eps      n bài báo  (A) 1/(4c^2)   (B) V/(4c^2)   sai (A)      sai (B)     
+  0.1      9          8.66           12.91          -3.72 %      +43.44 %    
+  0.01     600        580.11         617.96         -3.31 %      +2.99 %     
+  0.001    35000      35207.24       35543.42       +0.59 %      +1.55 %     
+  tổng sai lệch tương đối:  (A) 0.0763   (B) 0.4798   -> chọn (A)
+  Cách đọc (A) đúng theo chữ, và nó khớp hơn hẳn. Nghĩa là bài báo lấy độ
+  lệch chuẩn tiệm cận BẰNG n^{-1/2}, tức bỏ qua thừa số sqrt(V) — hợp lý vì
+  V chỉ trong khoảng 1.0 - 1.5 ở ba dòng này, và cả ba con số đều được làm
+  tròn về số chẵn chục/nghìn.
+
+Cận của trung vị, tr.83: |c| <= eps (1-eps)^{-1} (2 phi(0))^{-1} ~ 1.25 eps (1-eps)^{-1}
+  (2 phi(0))^{-1} = 1.2533141373   -> hệ số bài báo làm tròn thành 1.25
+  eps = 0.001   cận trung vị = 0.00125457   cận Huber k tối ưu = 0.00265802
+  eps = 0.01    cận trung vị = 0.01265974   cận Huber k tối ưu = 0.02072009
+  eps = 0.1     cận trung vị = 0.13925713   cận Huber k tối ưu = 0.16986891
+
+Kiểm câu tr.86: 'less than eps n = 1, 6 or 35 observations':
+  eps = 0.1     n = 9       eps·n = 0.9
+  eps = 0.01    n = 600     eps·n = 6.0
+  eps = 0.001   n = 35000   eps·n = 35.0
+
+============================================================================================
+7. BẢNG II tr.92 — dựng lại (a, b, c) từ ba phương trình (i), (ii), (iii)
+============================================================================================
+Mục 9 tr.92. F_0 có mật độ đối xứng
+    f_0(t) = phi(a) (cos(ca/2))^{-2} (cos(ct/2))^2   với 0 <= t <= a
+           = phi(t)                                  với a <  t <  b
+           = phi(b) e^{-b(t-b)}                      với t >= b
+và a, b, c xác định bởi
+    (i)   c tan(ca/2) = a          (0 <= ca < pi)
+    (ii)  int_0^a f_0 dt = int_0^a phi dt - eps
+    (iii) int_b^inf f_0 dt = int_b^inf phi dt + eps
+
+  eps      a  (bài báo / đo lại)  b  (bài báo / đo lại)  c  (bài báo / đo lại)  sai số hệ
+  0.001      0.65 / 0.653368        2.44 / 2.436408        1.37 / 1.365825      2.69e-17
+  0.002      0.75 / 0.753408        2.23 / 2.231719        1.35 / 1.350687      1.09e-16
+  0.005      0.91 / 0.911771        1.95 / 1.948302        1.32 / 1.323350      2.22e-16
+  0.01       1.06 / 1.056368        1.72 / 1.724094        1.29 / 1.295287      5.33e-16
+  0.02       1.24 / 1.228800        1.49 / 1.492062        1.26 / 1.258733      2.22e-16
+  0.03       1.34 / 1.346175        1.36 / 1.353362        1.23 / 1.232381      2.78e-17
+  số ô lệch quá 0.005 (nửa đơn vị chữ số cuối): 4 / 18
+     · eps = 0.01    cột c: in 1.29 · đo lại 1.295287 · chênh +0.0053 (=0.5 đơn vị chữ số cuối)
+     · eps = 0.02    cột a: in 1.24 · đo lại 1.228800 · chênh -0.0112 (=1.1 đơn vị chữ số cuối)
+     · eps = 0.03    cột a: in 1.34 · đo lại 1.346175 · chênh +0.0062 (=0.6 đơn vị chữ số cuối)
+     · eps = 0.03    cột b: in 1.36 · đo lại 1.353362 · chênh -0.0066 (=0.7 đơn vị chữ số cuối)
+  Không ô nào lệch quá 1.2 đơn vị của chữ số cuối được in. Bảng II chỉ in
+  hai chữ số thập phân và được tính bằng tay năm 1963, nên mức đó là mức
+  của phép giải tay, không phải lỗi công thức: sai số của hệ ba phương
+  trình tại nghiệm dựng lại là ~1e-16, tức hệ được thoả tuyệt đối.
+
+Kiểm điều kiện 0 <= a <= b mà bài báo nói chỉ thoả với eps tới ~0.03:
+  eps = 0.03    a =  1.34617  b =  1.35336  c =  1.23238  a <= b? có     sai số 1.1e-16
+  eps = 0.035   a =  1.39470  b =  1.30021  c =  1.22122  a <= b? KHÔNG  sai số 1.9e-16
+  eps = 0.04    a =  1.43871  b =  1.25404  c =  1.21099  a <= b? KHÔNG  sai số 2.2e-16
+  eps = 0.05    a =  1.51679  b =  1.17671  c =  1.19262  a <= b? KHÔNG  sai số 3.2e-16
+
+'The solution is valid only for values of eps between 0 and (approximately)
+ 0.03, but it seems that this range is just the range important in practice.'
+(tr.91) — phép đo trên xác nhận: a vượt b ngay sau 0.03.
+
+Kiểm bất đẳng thức chốt của chứng minh tr.93: c^2 + a^2 - 2 >= 0
+  eps = 0.001   c^2 + a^2 - 2 = +0.29236864   thoả
+  eps = 0.002   c^2 + a^2 - 2 = +0.39197873   thoả
+  eps = 0.005   c^2 + a^2 - 2 = +0.58258279   thoả
+  eps = 0.01    c^2 + a^2 - 2 = +0.79368026   thoả
+  eps = 0.02    c^2 + a^2 - 2 = +1.09435826   thoả
+  eps = 0.03    c^2 + a^2 - 2 = +1.33095029   thoả
+
+============================================================================================
+8. Mục 10 tr.94 — công thức (3) và (4), ước lượng thang đo
+============================================================================================
+Công thức (3) tr.94:
+    (1 - eps)^{-1} = int_{-q}^{q} phi(t) dt + 2 q (q^2 - 1)^{-1} phi(q)
+Công thức (4) tr.94:
+    psi_0(q, t) = t         với |t| < q
+                = q sign(t) với |t| >= q
+
+Ý nghĩa: bài toán thang đo quy về bài toán vị trí bằng phép đổi biến Y = log X^2
+(tr.93). Công thức (3) là bản tương ứng của quan hệ k <-> eps ở mục 6, nhưng mẫu
+số (q^2 - 1) thay cho q — vì -g'(u)/g(u) của phân phối log X^2 là (e^u - 1)/2
+chứ không phải u.
+
+  q        eps từ (3)       eps từ mục 6 (để so) tỉ số     
+  1.10     0.66787657       0.11092361       6.0210    
+  1.45     0.18012466       0.04329978       4.1599    
+  1.70     0.07412370       0.02106190       3.5193    
+  2.00     0.02580420       0.00841922       3.0649    
+  2.08     0.01944287       0.00652875       2.9780    
+  2.50     0.00425610       0.00160074       2.6588    
+  2.53     0.00380768       0.00144104       2.6423    
+  3.00     0.00062370       0.00025470       2.4487    
+  3.01     0.00059927       0.00024504       2.4456    
+
+Hai cột khác nhau: cùng một chữ q/k nhưng HAI bài toán khác nhau.
+
+============================================================================================
+9. BẢNG III tr.95 — dựng lại S_infinity, q và eps_min
+============================================================================================
+Suy luận tr.95, nguyên văn: '1 = E_Phi psi_0^2(q, t/S_inf) = S_inf^{-2}
+E_Phi psi_0^2(q S_inf, t)'. Đặt q' = q S_inf thì vế phải thành S_inf^{-2} beta(q'),
+nên
+    S_inf = sqrt( E_Phi psi^2(q') )
+rồi q = q'/S_inf, rồi eps_min lấy từ công thức (3) với q đó.
+Cột S_inf vì thế KHÔNG cần giải phương trình nào — nó là căn của chính cột
+E_Phi psi^2 của Bảng I, đọc ở mức q'.
+
+  q'       S_inf (in / đo lại)      q = q'/S (in / đo)       eps_min (in / đo lại)   
+  1.1       0.760 / 0.760069047       1.45 / 1.447236938       0.1820 / 0.181925750  
+  1.5       0.882 / 0.882306759       1.70 / 1.700088983       0.0740 / 0.074100490  
+  2.0       0.960 / 0.959446156       2.08 / 2.084535946       0.0190 / 0.019132500  
+  2.5       0.989 / 0.988716331       2.53 / 2.528531108       0.0038 / 0.003828530  
+  3.0       0.997 / 0.997500515       3.01 / 3.007517243       0.0006 / 0.000605251  
+  số ô mà giá trị đo lại LÀM TRÒN KHÁC giá trị in: 2 / 15
+     · q' = 2.0 : in 0.960 · đo lại 0.959446156 · làm tròn 0.959
+     · q' = 3.0 : in 0.997 · đo lại 0.997500515 · làm tròn 0.998
+
+============================================================================================
+10. BẢNG IV tr.99 — dựng lại qua công thức (7)
+============================================================================================
+Công thức (7) tr.99:
+    beta(q)/q^2 >= (beta(k)/k^2 - eps) / (1 - eps),   beta(k) = E_Phi psi^2(k, x)
+'equality in (7) determines a sharp upper bound q_max for q'. Rồi tr.100:
+'one may determine the upper bound q_max from (7) and enter Table 1 with
+ k = q_max and eps to determine the upper bound for the variance. This was done,
+ using linear interpolation, to obtain Table 4.'
+
+Ba cột: bài báo in · dựng lại bằng CÔNG THỨC · dựng lại bằng NỘI SUY Bảng I
+  k      eps      q_max      bài báo     công thức   nội suy    
+  1.0    0.000    1.0000     1.107       1.1073      1.1070     
+  1.0    0.010    1.0123     1.138       1.1379      1.1378     
+  1.0    0.020    1.0250     1.172       1.1700      1.1707     
+  1.0    0.050    1.0653     1.276       1.2755      1.2762     
+  1.0    0.100    1.1410     1.490       1.4899      1.4904     
+  1.0    0.200    1.3371     2.150       2.1503      2.1517     
+  1.1    0.000    1.1000     1.088       1.0880      1.0880     
+  1.1    0.010    1.1141     1.120       1.1200      1.1199     
+  1.1    0.020    1.1287     1.155       1.1535      1.1540     
+  1.1    0.050    1.1751     1.265       1.2646      1.2652     
+  1.1    0.100    1.2631     1.495       1.4938      1.4948     
+  1.1    0.200    1.4971     2.230       2.2314      2.2315     
+  1.2    0.000    1.2000     1.072       1.0718      1.0720     
+  1.2    0.010    1.2161     1.105       1.1052      1.1051     
+  1.2    0.020    1.2328     1.140       1.1405      1.1407     
+  1.2    0.050    1.2861     1.258       1.2582      1.2587     
+  1.2    0.100    1.3882     1.506       1.5056      1.5058     
+  1.2    0.200    1.6683     2.350       2.3435      2.3445     
+  1.3    0.000    1.3000     1.058       1.0580      1.0580     
+  1.3    0.010    1.3183     1.093       1.0933      1.0933     
+  1.3    0.020    1.3373     1.131       1.1306      1.1310     
+  1.3    0.050    1.3984     1.256       1.2561      1.2560     
+  1.3    0.100    1.5169     1.526       1.5254      1.5254     
+  1.3    0.200    1.8543     2.500       2.4949      2.4963     
+  1.4    0.000    1.4000     1.047       1.0466      1.0470     
+  1.4    0.010    1.4208     1.084       1.0839      1.0843     
+  1.4    0.020    1.4424     1.124       1.1235      1.1239     
+  1.4    0.050    1.5122     1.257       1.2581      1.2585     
+  1.4    0.100    1.6497     1.557       1.5538      1.5544     
+  1.4    0.200    2.0605     2.700       2.6986      2.6997     
+  1.5    0.000    1.5000     1.037       1.0371      1.0370     
+  1.5    0.010    1.5235     1.077       1.0767      1.0768     
+  1.5    0.020    1.5480     1.120       1.1189      1.1196     
+  1.5    0.050    1.6278     1.264       1.2641      1.2642     
+  1.5    0.100    1.7878     1.592       1.5915      1.5916     
+  1.5    0.200    2.2951     2.970       2.9755      2.9759     
+  1.6    0.000    1.6000     1.029       1.0293      1.0290     
+  1.6    0.010    1.6266     1.072       1.0714      1.0719     
+  1.6    0.020    1.6544     1.117       1.1166      1.1169     
+  1.6    0.050    1.7456     1.275       1.2740      1.2746     
+  1.6    0.100    1.9321     1.639       1.6393      1.6399     
+  1.6    0.200    2.5715     3.360       3.3612      3.3622     
+  1.7    0.000    1.7000     1.023       1.0229      1.0230     
+  1.7    0.010    1.7300     1.068       1.0679      1.0681     
+  1.7    0.020    1.7615     1.117       1.1165      1.1166     
+  1.7    0.050    1.8658     1.288       1.2876      1.2879     
+  1.7    0.100    2.0842     1.697       1.6987      1.6987     
+  1.7    0.200    2.9129     3.920       3.9213      3.9220     
+  1.8    0.000    1.8000     1.018       1.0178      1.0180     
+  1.8    0.010    1.8339     1.066       1.0659      1.0657     
+  1.8    0.020    1.8695     1.118       1.1182      1.1184     
+  1.8    0.050    1.9888     1.306       1.3051      1.3053     
+  1.8    0.100    2.2458     1.769       1.7714      1.7720     
+  1.8    0.200    3.3638     >4          4.7915      -          
+  1.9    0.000    1.9000     1.014       1.0137      1.0140     
+  1.9    0.010    1.9382     1.065       1.0652      1.0650     
+  1.9    0.020    1.9785     1.121       1.1216      1.1214     
+  1.9    0.050    2.1152     1.324       1.3264      1.3269     
+  1.9    0.100    2.4193     1.859       1.8600      1.8606     
+  1.9    0.200    4.0214     >4          6.3043      -          
+  2.0    0.000    2.0000     1.010       1.0104      1.0100     
+  2.0    0.010    2.0430     1.065       1.0657      1.0654     
+  2.0    0.020    2.0886     1.127       1.1266      1.1353     
+  2.0    0.050    2.2454     1.353       1.3517      1.3521     
+  2.0    0.100    2.6080     2.029       1.9681      1.9679     
+  2.0    0.200    5.1525     >4          9.5462      -          
+
+  ô đã đối chiếu: 63   lệch theo CÔNG THỨC: 6   lệch theo NỘI SUY: 7
+  Phân tán so với nội suy, xếp từ lớn nhất (đơn vị: chữ số cuối được in):
+     · k = 2.0 eps = 0.100 : lệch 0.0611  = 61.1 đơn vị
+     · k = 2.0 eps = 0.020 : lệch 0.0083  = 8.3 đơn vị
+     · k = 1.5 eps = 0.200 : lệch 0.0059  = 5.9 đơn vị
+     · k = 1.2 eps = 0.200 : lệch 0.0055  = 5.5 đơn vị
+  Bỏ ô lớn nhất ra thì lệch tối đa còn 0.0083 (8.3 đơn vị chữ số cuối),
+  trung bình 0.0009. Ô lớn nhất lệch 61.1 đơn vị — gấp 7.4 lần ô lệch nhiều
+  thứ hai và gấp 66 lần mức trung bình của 60 ô còn lại, nên nó thuộc
+  một loại khác chứ không phải phần đuôi của cùng một phân bố sai số.
+  (bài báo nói rõ nó dùng nội suy tuyến tính, nên cột 'nội suy' mới là cột
+   phải khớp; cột 'công thức' chính xác hơn và cho biết nội suy sai bao nhiêu)
+  ngưỡng lệch = 1.5 đơn vị của chữ số cuối được in.
+     · k = 1.0 eps = 0.020 : in 1.172 · công thức 1.1700 · nội suy 1.1707
+     · k = 1.4 eps = 0.100 : in 1.557 · công thức 1.5538 · nội suy 1.5544
+     · k = 1.7 eps = 0.100 : in 1.697 · công thức 1.6987 · nội suy 1.6987
+     · k = 1.8 eps = 0.100 : in 1.769 · công thức 1.7714 · nội suy 1.7720
+     · k = 1.9 eps = 0.050 : in 1.324 · công thức 1.3264 · nội suy 1.3269
+     · k = 2.0 eps = 0.100 : in 2.029 · công thức 1.9681 · nội suy 1.9679
+
+  Ô duy nhất lệch nằm ở cột eps = 0.100. Xem nó trong CỘT của chính nó:
+     bài báo in : 1.490  1.495  1.506  1.526  1.557  1.592  1.639  1.697  1.769  1.859  2.029
+     sai phân   : +0.005  +0.011  +0.020  +0.031  +0.035  +0.047  +0.058  +0.072  +0.090  +0.170
+     đo lại     : 1.490  1.494  1.506  1.525  1.554  1.591  1.639  1.699  1.771  1.860  1.968
+     sai phân   : +0.004  +0.012  +0.020  +0.028  +0.038  +0.048  +0.059  +0.073  +0.089  +0.108
+  Bước cuối của cột đã in là +0.170, gần GẤP ĐÔI bước liền trước (+0.090),
+  trong khi mọi bước khác tăng đều. Dãy đo lại không có chỗ gãy đó.
+  Muốn ra 2.029 thì phải vào Bảng I ở k = 2.7063, trong khi công thức (7)
+  cho q_max = 2.6080. Chênh 0.0983 — không cách đọc nào của (7) cho ra nó.
+
+============================================================================================
+11. Mục 12 tr.100-101 — Hodges-Lehmann, hai bảng không đánh số
+============================================================================================
+Mục 12 mở rộng sang (M_r)-estimator. Ví dụ r = 2, rho_2(t1,t2) = |t1 + t2|
+cho đúng ước lượng Hodges-Lehmann (trung vị của mọi (x_i+x_j)/2), với
+    V(psi_2, F) = 1 / (12 (int f^2 dt)^2)
+và trong trường hợp chuẩn nhiễm bẩn có cận trên sắc (1-eps)^{-4} pi/3.
+
+  eps      bài báo in     đo lại         chênh
+  0.000    1.047          1.047198       +0.000198
+  0.001    1.051          1.051397       +0.000397
+  0.002    1.056          1.055617       -0.000383
+  0.005    1.068          1.068406       +0.000406
+  0.010    1.090          1.090154       +0.000154
+  0.020    1.135          1.135336       +0.000336
+  0.050    1.286          1.285684       -0.000316
+  0.100    1.596          1.596094       +0.000094
+  0.200    2.557          2.556635       -0.000365
+  0.500    16.760         16.755161      -0.004839
+  số ô lệch: 0 / 10   (pi/3 = 1.0471975512)
+
+Bảng thứ hai tr.101 — mô hình nhiễm bẩn 'quy ước' F = (1-eps) Phi(t) + eps Phi(t/3):
+  eps      Hodges-Lehmann (in / đo) Đề xuất 2 k=1.5 (in / đo)
+  0.00      1.047 / 1.04719755       1.037 / 1.03709076     
+  0.01      1.070 / 1.07064731       1.060 / 1.05964650     
+  0.02      1.090 / 1.09469712       1.080 / 1.08293194     
+  0.05      1.170 / 1.17061179       1.160 / 1.15746262     
+  0.10      1.310 / 1.31074145       1.300 / 1.29922548     
+  số ô lệch: 0 / 10
+
+'apparently, the Hodges-Lehmann estimator and the estimators proposed in the
+ preceding sections are close competitors.' (tr.101) — đo lại: Đề xuất 2
+ thắng ở CẢ NĂM cột, biên lớn nhất 0.0131 điểm.
+
+============================================================================================
+12. Mục 11 tr.96-98 — ba Đề xuất, hệ (6), và thuật toán (6')
+============================================================================================
+Đề xuất 1 (tr.96): chọn k trước, rồi giải
+    n^{-1} sum psi(k, (x_i - T)/S) = 0
+    n^{-1} sum psi'(k, (x_i - T)/S) = E_Phi psi'(k, x)
+Đề xuất 2 (tr.96): chọn k trước, rồi giải
+    n^{-1} sum psi(k, (x_i - T)/S) = 0
+    n^{-1} sum psi^2(k, (x_i - T)/S) = E_Phi psi^2(k, x)
+Đề xuất 3 (tr.97): chọn k để cực tiểu hoá phương sai tiệm cận ước lượng được.
+
+Hệ (6) tr.97 viết Đề xuất 2 ở dạng tổng quát với một hằng số beta:
+    sum psi(k, (x_i - T)/S)   = 0
+    sum psi^2(k, (x_i - T)/S) = n beta
+'Proposal 2 corresponds to beta = E_Phi psi^2(k, x)'.
+
+Thuật toán (6') tr.98 — bản cài đặt dưới đây chép đúng ba dòng của bài báo.
+
+  k = 1.000  -> T = +0.1670307171  S = 0.9822393449  sau 4 vòng
+  k = 1.345  -> T = +0.1886219230  S = 1.0225069318  sau 5 vòng
+  k = 1.500  -> T = +0.1933288002  S = 1.0148478676  sau 3 vòng
+  k = 2.000  -> T = +0.2170546885  S = 1.0106253416  sau 3 vòng
+
+  trung bình mẫu   = +0.8797921736
+  trung vị mẫu     = +0.1701946718
+  độ lệch chuẩn    = 3.6100553865
+  MAD/0.6745       = 1.0528670864
+
+Kiểm hệ (6) có thật sự được thoả ở nghiệm — đây là phép thử ngược:
+  k = 1.000   sum psi = +0.000e+00   sum psi^2 - n beta = +3.553e-15
+  k = 1.345   sum psi = +2.220e-15   sum psi^2 - n beta = +0.000e+00
+  k = 1.500   sum psi = -8.882e-16   sum psi^2 - n beta = +0.000e+00
+  k = 2.000   sum psi = +0.000e+00   sum psi^2 - n beta = +0.000e+00
+
+Câu tr.99 về tốc độ: 'For k = 1.5, sample sizes up to 100 and distributions
+that do not have too heavy tails, the stationary value is on the average
+reached after 1-2 steps, starting from sample mean and sample variance.'
+Đo lại trên 2000 mẫu chuẩn cỡ 100, k = 1.5, khởi đầu đúng như bài báo dặn:
+  trung bình 2.6960 lượt áp (6') · trung vị 3.0 · tối đa 4 · 2000 mẫu
+  Lượt cuối chỉ XÁC NHẬN T, S không đổi nữa, không phải một bước đi.
+  (con số CHƯA trừ lượt xác nhận: 2.6960)
+  Trừ nó ra: trung bình 1.6960 bước ĐỔI · trung vị 2.0 · tối đa 3
+  -> rơi đúng vào khoảng '1-2 steps' bài báo nêu.
+
+Đuôi nặng — Cauchy, đúng ví dụ bài báo nêu ('about 2 for sample size 10,
+4 for sample size 100'):
+  n = 10    trung bình 1.5560 bước ĐỔI · trung vị 1.0 · tối đa 3 · 2000/2000 mẫu
+            (chưa trừ lượt xác nhận: 2.5560)
+  n = 100   trung bình 4.2730 bước ĐỔI · trung vị 4.0 · tối đa 7 · 2000/2000 mẫu
+            (chưa trừ lượt xác nhận: 5.2730)
+
+============================================================================================
+13. scikit-learn cài hệ (6) với beta = 1, KHÔNG phải beta = E_Phi psi^2
+============================================================================================
+HuberRegressor của scikit-learn cực tiểu hoá theo (w, sigma):
+    sum_i ( sigma + H_eps(r_i/sigma) sigma ) + alpha ||w||^2
+Đạo hàm theo sigma rồi cho bằng 0 cho ra ĐÚNG phương trình thứ hai của hệ (6)
+tr.97, với beta = 1:
+    n^{-1} sum psi^2(k, r_i/S) = 1
+Đề xuất 2 của bài báo thì đặt beta = E_Phi psi^2(k, x) < 1.
+
+Hệ quả có thể đoán trước: E_Phi psi^2 < 1 nên Đề xuất 2 cần S LỚN HƠN.
+
+  k = 1.345:  E_Phi psi^2 = 0.7101645483   beta của sklearn = 1
+  tỉ số hai vế = 1.4081243600
+
+Ba cột hệ số góc, trên cùng dữ liệu, cùng k = 1.345:
+  đẩy lệch   sklearn          scale_       hệ (6) beta=1    S            Đề xuất 2        S           
+  0          1.1095543344     0.568033     1.1095525312     0.568032     1.1199984817     0.889447    
+  100        1.1010663787     0.583348     1.1010652955     0.583348     1.1099811489     0.910258    
+  100000     1.1010559667     0.583350     1.1010652955     0.583348     1.1099811489     0.910258    
+
+Cột 2 và cột 4 phải trùng nhau tới dung sai tối ưu — đó là bằng chứng
+sklearn = hệ (6) với beta = 1. In ra chênh lệch:
+  đẩy 0        |hệ số| chênh 1.803e-06   |thang đo| chênh 3.395e-07
+  đẩy 100      |hệ số| chênh 1.083e-06   |thang đo| chênh 5.411e-07
+  đẩy 100000   |hệ số| chênh 9.329e-06   |thang đo| chênh 2.430e-06
+
+Và so IRLS + MAD (cách sách giáo khoa hay dạy) với cả ba:
+  đẩy 0        MAD: hệ số 1.116426 thang 0.806835 | sklearn 1.109554 thang 0.568033 | ĐX2 1.119998 thang 0.889447
+             MAD lệch sklearn 0.6193 %   ĐX2 lệch sklearn 0.9413 %
+  đẩy 100      MAD: hệ số 1.107912 thang 0.859078 | sklearn 1.101066 thang 0.583348 | ĐX2 1.109981 thang 0.910258
+             MAD lệch sklearn 0.6217 %   ĐX2 lệch sklearn 0.8096 %
+  đẩy 100000   MAD: hệ số 1.107912 thang 0.859078 | sklearn 1.101056 thang 0.583350 | ĐX2 1.109981 thang 0.910258
+             MAD lệch sklearn 0.6227 %   ĐX2 lệch sklearn 0.8106 %
+
+============================================================================================
+14. k = 1.345 và con số 95 % — đo bằng chính công thức của bài báo
+============================================================================================
+Bài báo 1964 KHÔNG chứa con số 1.345 và KHÔNG chứa chữ '95 %'. Nó là hệ quả
+của công thức (1): hiệu suất tiệm cận tại Phi bằng 1/V(k), vì thông tin Fisher
+của Phi bằng 1. Giải 1/V(k) = 0.95 cho ra k.
+
+  k cho hiệu suất đúng 95 %   = 1.3449975085
+  hiệu suất tại k = 1.345      = 0.9500002597
+  -> mất 0.0499997403, tức 5.0000 % so với bình phương tối thiểu khi dữ liệu sạch
+  hiệu suất tại k = 1.35       = 0.9505193431
+
+  k        hiệu suất tại Phi V tại Phi        eps_min         
+  0.500    0.7920531043     1.2625416081     0.44171076      
+  1.000    0.9031241548     1.1072674722     0.14283089      
+  1.345    0.9500002597     1.0526312912     0.05791489      
+  1.500    0.9642357653     1.0370907572     0.03760623      
+  2.000    0.9897155897     1.0103912784     0.00841922      
+  3.000    0.9995984137     1.0004017476     0.00025470      
+  5.000    0.9999999613     1.0000000387     0.00000002      
+
+  eps_min ứng với k = 1.345    = 0.0579148930
+  -> k = 1.345 là nghiệm minimax cho mức nhiễm bẩn 5.7915 %
+
+Đối chiếu với Bảng I: hàng k = 1.3 và k = 1.4 kẹp lấy 1.345.
+  Bảng I k=1.3 eps=0 -> 1.058 ; đo lại 1.058047
+  Bảng I k=1.4 eps=0 -> 1.047 ; đo lại 1.046591
+  nội suy tuyến tính tại 1.345 -> 1.053050 ; công thức -> 1.052631
+
+============================================================================================
+15. Từ vị trí sang hồi quy — phá dữ liệu theo y, và leverage theo X
+============================================================================================
+Thí nghiệm 1 — n = 100, hệ số thật 1.0, đẩy lệch MỘT điểm theo y:
+  đẩy lệch     OLS              Huber k=1.345   
+  0            1.1762358737     1.1095543344    
+  10           1.1187880208     1.1010663787    
+  100          0.6017573443     1.1010663787    
+  1000         -4.5685494199    1.1010559667    
+  100000       -573.3022934887  1.1010559667    
+
+Thí nghiệm 2 — n = 60 sinh từ y = 2 + 1.5x, đẩy lệch ĐÚNG MỘT điểm:
+  mức đẩy        OLS: chặn · góc            Huber: chặn · góc         
+  không đẩy      +2.022501 · +1.518192   +2.024748 · +1.500557
+  +20            +2.339040 · +1.322127   +2.028906 · +1.499050
+                 OLS lệch góc -11.8582 %        Huber lệch góc -0.0633 %
+  +50            +2.813849 · +1.028030   +2.028906 · +1.499050
+                 OLS lệch góc -31.4647 %        Huber lệch góc -0.0633 %
+  +100           +3.605196 · +0.537867   +2.028906 · +1.499050
+                 OLS lệch góc -64.1422 %        Huber lệch góc -0.0633 %
+
+Thí nghiệm 3 — ĐIỂM SỤP ĐỔ: một điểm có leverage cao theo X.
+Bài báo 1964 chỉ bàn bài toán VỊ TRÍ, nơi không có leverage. Đây là phần
+bài viết tự đo, và kết quả đi NGƯỢC trực giác 'Huber bền vững'.
+  x điểm hỏng OLS góc          Huber góc        phần dư điểm đó  |Huber - OLS| 
+  1          0.79236371       1.46375322       -39.953047       6.714e-01     
+  3          -0.29417579      1.40600945       -39.696079       1.700e+00     
+  10         -1.00927359      1.19745265       -36.932584       2.207e+00     
+  50         0.71963983       0.71223015       -0.546263        7.410e-03     
+  500        1.41999488       1.41999381       -0.004725        1.072e-06     
+  5000       1.49199601       1.49199541       -0.000044        5.980e-07     
+  Hệ số thật 1.5. Đọc theo CỘT CUỐI: leverage càng lớn thì Huber càng
+  trùng OLS — ở x = 5000 hai bộ ước lượng chênh nhau dưới một phần triệu,
+  tức phần bền vững đã biến mất HẲN. Cột 'phần dư' cho cơ chế: đường khớp
+  bị kéo đi qua chính điểm hỏng, nên phần dư của nó co về 0 và psi không
+  bao giờ chạm ngưỡng. Cột 'Huber góc' KHÔNG đơn điệu vì hai hiệu ứng ngược
+  chiều chồng nhau; chỉ cột cuối mới đọc được thành một kết luận.
+
+Đo trực tiếp điểm sụp đổ: một điểm đủ xa theo X kéo hệ số đi bao nhiêu.
+  hệ số Huber trên dữ liệu sạch          = 1.50055665
+  thêm 1 điểm tại x = 100      y = 0      -> hệ số = -0.01336733
+  thêm 1 điểm tại x = 1000     y = 0      -> hệ số = -0.00186955
+  thêm 1 điểm tại x = 10000    y = 0      -> hệ số = -0.00019221
+
+============================================================================================
+16. Ví dụ tối thiểu 6 điểm, và sai số chuẩn theo công thức tr.97
+============================================================================================
+  x = 0, 1, 2, 3, 4, 5
+  y = 1, 3, 25, 7, 9, 11   (điểm x = 2 bị đẩy thêm 20)
+
+  LinearRegression chặn = 5.7619047619  góc = 1.4285714286
+  HuberRegressor   chặn = 1.0000010986  góc = 1.9999999901
+  thang đo scale_       = 0.0000032624
+
+Ước lượng phương sai tiệm cận, tr.97:
+    (n/(n-1)) · sum psi^2(k,(x_i-T)/S) / [sum psi'(k,(x_i-T)/S)]^2 · S^2
+Đây chính là ước lượng 'bánh kẹp' mà tài liệu hiện đại gọi là sandwich, viết ra
+từ 1964. Áp cho bộ n = 100 ở mục 15:
+  n = 100   sum psi^2 = 99.99994132   sum psi' = 61
+  -> 39 trên 100 quan sát nằm NGOÀI ngưỡng và bị giảm trọng số, dù dữ liệu
+     sinh từ phân phối chuẩn thuần tuý (tỉ lệ 0.3900)
+  -> sum psi^2 / n = 0.99999941, tức đúng vế phải beta = 1 của sklearn
+  ước lượng phương sai của T (thang vị trí) = 0.0087589426
+  -> sai số chuẩn = 0.0935892226
+  so với sai số chuẩn OLS thường = 0.0963067742
+
+============================================================================================
+17. Số cho các khối mã sinh hình — in đủ chữ số để dán thẳng
+============================================================================================
+KS = [0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 1.00, 1.05, 1.10, 1.15, 1.20, 1.25, 1.30, 1.35, 1.40, 1.45, 1.50, 1.55, 1.60, 1.65, 1.70, 1.75, 1.80, 1.85, 1.90, 1.95, 2.00, 2.05, 2.10, 2.15, 2.20, 2.25, 2.30, 2.35, 2.40, 2.45, 2.50, 2.55, 2.60, 2.65, 2.70, 2.75, 2.80, 2.85, 2.90, 2.95, 3.00]
+V_eps_0_0 = [1.5707963268, 1.5303041403, 1.4922882245, 1.4566137153, 1.4231529172, 1.3917849572, 1.3623954393, 1.3348761025, 1.3091244855, 1.2850435991, 1.2625416081, 1.2415315246, 1.2219309134, 1.2036616102, 1.1866494545, 1.1708240363, 1.1561184581, 1.1424691117, 1.1298154709, 1.1180998990, 1.1072674722, 1.0972658173, 1.0880449649, 1.0795572160, 1.0717570235, 1.0646008857, 1.0580472527, 1.0520564440, 1.0465905766, 1.0416135031, 1.0370907572, 1.0329895071, 1.0292785148, 1.0259281001, 1.0229101083, 1.0201978806, 1.0177662256, 1.0155913912, 1.0136510366, 1.0119242022, 1.0103912784, 1.0090339711, 1.0078352651, 1.0067793841, 1.0058517482, 1.0050389277, 1.0043285943, 1.0037094706, 1.0031712761, 1.0027046727, 1.0023012090, 1.0019532630, 1.0016539858, 1.0013972456, 1.0011775719, 1.0009901016, 1.0008305273, 1.0006950470, 1.0005803162, 1.0004834034, 1.0004017476]
+V_eps_0_01 = [1.6026898549, 1.5618020155, 1.5234422179, 1.4874743557, 1.4537696439, 1.4222062681, 1.3926690358, 1.3650490302, 1.3392432710, 1.3151543826, 1.2926902714, 1.2717638151, 1.2522925633, 1.2341984510, 1.2174075265, 1.2018496929, 1.1874584643, 1.1741707371, 1.1619265763, 1.1506690165, 1.1403438779, 1.1308995973, 1.1222870727, 1.1144595222, 1.1073723566, 1.1009830639, 1.0952511061, 1.0901378277, 1.0856063738, 1.0816216177, 1.0781500972, 1.0751599580, 1.0726209032, 1.0705041481, 1.0687823795, 1.0674297173, 1.0664216792, 1.0657351463, 1.0653483287, 1.0652407317, 1.0653931211, 1.0657874865, 1.0664070041, 1.0672359971, 1.0682598944, 1.0694651873, 1.0708393852, 1.0723709688, 1.0740493425, 1.0758647863, 1.0778084069, 1.0798720880, 1.0820484415, 1.0843307597, 1.0867129668, 1.0891895737, 1.0917556323, 1.0944066934, 1.0971387649, 1.0999482731, 1.1028320258]
+V_eps_0_05 = [1.7404945449, 1.6979437294, 1.6581448097, 1.6209564757, 1.5862453976, 1.5538858593, 1.5237593934, 1.4957544183, 1.4697658813, 1.4456949093, 1.4234484683, 1.4029390333, 1.3840842691, 1.3668067240, 1.3510335355, 1.3366961494, 1.3237300520, 1.3120745158, 1.3016723588, 1.2924697167, 1.2844158283, 1.2774628336, 1.2715655847, 1.2666814678, 1.2627702379, 1.2597938634, 1.2577163819, 1.2565037662, 1.2561237987, 1.2565459555, 1.2577412991, 1.2596823775, 1.2623431321, 1.2656988115, 1.2697258916, 1.2744020021, 1.2797058580, 1.2856171965, 1.2921167185, 1.2991860353, 1.3068076189, 1.3149647568, 1.3236415106, 1.3328226786, 1.3424937612, 1.3526409306, 1.3632510028, 1.3743114127, 1.3858101921, 1.3977359496, 1.4100778528, 1.4228256124, 1.4359694675, 1.4495001720, 1.4634089822, 1.4776876447, 1.4923283844, 1.5073238927, 1.5226673159, 1.5383522423, 1.5543726895]
+V_eps_0_1 = [1.9392547244, 1.8944250510, 1.8526705642, 1.8138428684, 1.7778025005, 1.7444185418, 1.7135682295, 1.6851365710, 1.6590159632, 1.6351058175, 1.6133121941, 1.5935474449, 1.5757298670, 1.5597833662, 1.5456371323, 1.5332253252, 1.5224867726, 1.5133646782, 1.5058063418, 1.4997628885, 1.4951890097, 1.4920427128, 1.4902850808, 1.4898800413, 1.4907941431, 1.4929963427, 1.4964577984, 1.5011516717, 1.5070529382, 1.5141382057, 1.5223855403, 1.5317743015, 1.5422849860, 1.5538990798, 1.5665989210, 1.5803675719, 1.5951887015, 1.6110464796, 1.6279254819, 1.6458106068, 1.6646870045, 1.6845400184, 1.7053551378, 1.7271179638, 1.7498141861, 1.7734295705, 1.7979499577, 1.8233612709, 1.8496495318, 1.8768008843, 1.9048016239, 1.9336382314, 1.9632974111, 1.9937661294, 2.0250316556, 2.0570816014, 2.0899039586, 2.1234871350, 2.1578199864, 2.1928918443, 2.2286925393]
+EPSMIN = [1.0000000000, 0.9374125112, 0.8752916091, 0.8140904491, 0.7542361310, 0.6961186068, 0.6400816946, 0.5864165730, 0.5353579119, 0.4870825891, 0.4417107593, 0.3993089134, 0.3598944864, 0.3234415459, 0.2898871073, 0.2591376742, 0.2310756677, 0.2055654896, 0.1824590404, 0.1616005815, 0.1428308948, 0.1259907354, 0.1109236112, 0.0974779429, 0.0855086742, 0.0748784067, 0.0654581333, 0.0571276428, 0.0497756596, 0.0432997771, 0.0376062342, 0.0326095775, 0.0282322438, 0.0244040909, 0.0210619001, 0.0181488666, 0.0156140929, 0.0134120930, 0.0115023163, 0.0098486948, 0.0084192175, 0.0071855330, 0.0061225810, 0.0052082537, 0.0044230842, 0.0037499634, 0.0031738811, 0.0026816929, 0.0022619089, 0.0019045032, 0.0016007433, 0.0013430369, 0.0011247952, 0.0009403104, 0.0007846472, 0.0006535461, 0.0005433380, 0.0004508679, 0.0003734287, 0.0003087016, 0.0002547047]
+
+TT = [-4.0000, -3.9500, -3.9000, -3.8500, -3.8000, -3.7500, -3.7000, -3.6500, -3.6000, -3.5500, -3.5000, -3.4500, -3.4000, -3.3500, -3.3000, -3.2500, -3.2000, -3.1500, -3.1000, -3.0500, -3.0000, -2.9500, -2.9000, -2.8500, -2.8000, -2.7500, -2.7000, -2.6500, -2.6000, -2.5500, -2.5000, -2.4500, -2.4000, -2.3500, -2.3000, -2.2500, -2.2000, -2.1500, -2.1000, -2.0500, -2.0000, -1.9500, -1.9000, -1.8500, -1.8000, -1.7500, -1.7000, -1.6500, -1.6000, -1.5500, -1.5000, -1.4500, -1.4000, -1.3500, -1.3000, -1.2500, -1.2000, -1.1500, -1.1000, -1.0500, -1.0000, -0.9500, -0.9000, -0.8500, -0.8000, -0.7500, -0.7000, -0.6500, -0.6000, -0.5500, -0.5000, -0.4500, -0.4000, -0.3500, -0.3000, -0.2500, -0.2000, -0.1500, -0.1000, -0.0500, 0.0000, 0.0500, 0.1000, 0.1500, 0.2000, 0.2500, 0.3000, 0.3500, 0.4000, 0.4500, 0.5000, 0.5500, 0.6000, 0.6500, 0.7000, 0.7500, 0.8000, 0.8500, 0.9000, 0.9500, 1.0000, 1.0500, 1.1000, 1.1500, 1.2000, 1.2500, 1.3000, 1.3500, 1.4000, 1.4500, 1.5000, 1.5500, 1.6000, 1.6500, 1.7000, 1.7500, 1.8000, 1.8500, 1.9000, 1.9500, 2.0000, 2.0500, 2.1000, 2.1500, 2.2000, 2.2500, 2.3000, 2.3500, 2.4000, 2.4500, 2.5000, 2.5500, 2.6000, 2.6500, 2.7000, 2.7500, 2.8000, 2.8500, 2.9000, 2.9500, 3.0000, 3.0500, 3.1000, 3.1500, 3.2000, 3.2500, 3.3000, 3.3500, 3.4000, 3.4500, 3.5000, 3.5500, 3.6000, 3.6500, 3.7000, 3.7500, 3.8000, 3.8500, 3.9000, 3.9500, 4.0000]
+RHO_1345 = [4.47548750, 4.40823750, 4.34098750, 4.27373750, 4.20648750, 4.13923750, 4.07198750, 4.00473750, 3.93748750, 3.87023750, 3.80298750, 3.73573750, 3.66848750, 3.60123750, 3.53398750, 3.46673750, 3.39948750, 3.33223750, 3.26498750, 3.19773750, 3.13048750, 3.06323750, 2.99598750, 2.92873750, 2.86148750, 2.79423750, 2.72698750, 2.65973750, 2.59248750, 2.52523750, 2.45798750, 2.39073750, 2.32348750, 2.25623750, 2.18898750, 2.12173750, 2.05448750, 1.98723750, 1.91998750, 1.85273750, 1.78548750, 1.71823750, 1.65098750, 1.58373750, 1.51648750, 1.44923750, 1.38198750, 1.31473750, 1.24748750, 1.18023750, 1.11298750, 1.04573750, 0.97848750, 0.91123750, 0.84500000, 0.78125000, 0.72000000, 0.66125000, 0.60500000, 0.55125000, 0.50000000, 0.45125000, 0.40500000, 0.36125000, 0.32000000, 0.28125000, 0.24500000, 0.21125000, 0.18000000, 0.15125000, 0.12500000, 0.10125000, 0.08000000, 0.06125000, 0.04500000, 0.03125000, 0.02000000, 0.01125000, 0.00500000, 0.00125000, 0.00000000, 0.00125000, 0.00500000, 0.01125000, 0.02000000, 0.03125000, 0.04500000, 0.06125000, 0.08000000, 0.10125000, 0.12500000, 0.15125000, 0.18000000, 0.21125000, 0.24500000, 0.28125000, 0.32000000, 0.36125000, 0.40500000, 0.45125000, 0.50000000, 0.55125000, 0.60500000, 0.66125000, 0.72000000, 0.78125000, 0.84500000, 0.91123750, 0.97848750, 1.04573750, 1.11298750, 1.18023750, 1.24748750, 1.31473750, 1.38198750, 1.44923750, 1.51648750, 1.58373750, 1.65098750, 1.71823750, 1.78548750, 1.85273750, 1.91998750, 1.98723750, 2.05448750, 2.12173750, 2.18898750, 2.25623750, 2.32348750, 2.39073750, 2.45798750, 2.52523750, 2.59248750, 2.65973750, 2.72698750, 2.79423750, 2.86148750, 2.92873750, 2.99598750, 3.06323750, 3.13048750, 3.19773750, 3.26498750, 3.33223750, 3.39948750, 3.46673750, 3.53398750, 3.60123750, 3.66848750, 3.73573750, 3.80298750, 3.87023750, 3.93748750, 4.00473750, 4.07198750, 4.13923750, 4.20648750, 4.27373750, 4.34098750, 4.40823750, 4.47548750]
+PSI_1345 = [-1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.34500000, -1.30000000, -1.25000000, -1.20000000, -1.15000000, -1.10000000, -1.05000000, -1.00000000, -0.95000000, -0.90000000, -0.85000000, -0.80000000, -0.75000000, -0.70000000, -0.65000000, -0.60000000, -0.55000000, -0.50000000, -0.45000000, -0.40000000, -0.35000000, -0.30000000, -0.25000000, -0.20000000, -0.15000000, -0.10000000, -0.05000000, 0.00000000, 0.05000000, 0.10000000, 0.15000000, 0.20000000, 0.25000000, 0.30000000, 0.35000000, 0.40000000, 0.45000000, 0.50000000, 0.55000000, 0.60000000, 0.65000000, 0.70000000, 0.75000000, 0.80000000, 0.85000000, 0.90000000, 0.95000000, 1.00000000, 1.05000000, 1.10000000, 1.15000000, 1.20000000, 1.25000000, 1.30000000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000, 1.34500000]
+F0_1345 = [0.0042787871, 0.0045764317, 0.0048947812, 0.0052352761, 0.0055994568, 0.0059889708, 0.0064055806, 0.0068511710, 0.0073277579, 0.0078374975, 0.0083826960, 0.0089658201, 0.0095895080, 0.0102565814, 0.0109700583, 0.0117331666, 0.0125493589, 0.0134223279, 0.0143560231, 0.0153546688, 0.0164227831, 0.0175651985, 0.0187870835, 0.0200939663, 0.0214917595, 0.0229867873, 0.0245858134, 0.0262960723, 0.0281253016, 0.0300817773, 0.0321743511, 0.0344124902, 0.0368063205, 0.0393666726, 0.0421051299, 0.0450340822, 0.0481667806, 0.0515173984, 0.0551010948, 0.0589340831, 0.0630337051, 0.0674185083, 0.0721083309, 0.0771243909, 0.0824893822, 0.0882275775, 0.0943649380, 0.1009292306, 0.1079501541, 0.1154594729, 0.1234911612, 0.1320815565, 0.1412695241, 0.1510966328, 0.1614437984, 0.1720709831, 0.1829397904, 0.1940094917, 0.2052352915, 0.2165685411, 0.2279570159, 0.2393452534, 0.2506749511, 0.2618854212, 0.2729140975, 0.2836970900, 0.2941697802, 0.3042674500, 0.3139259357, 0.3230822983, 0.3316755010, 0.3396470820, 0.3469418145, 0.3535083424, 0.3592997809, 0.3642742742, 0.3683954982, 0.3716331027, 0.3739630832, 0.3753680774, 0.3758375809, 0.3753680774, 0.3739630832, 0.3716331027, 0.3683954982, 0.3642742742, 0.3592997809, 0.3535083424, 0.3469418145, 0.3396470820, 0.3316755010, 0.3230822983, 0.3139259357, 0.3042674500, 0.2941697802, 0.2836970900, 0.2729140975, 0.2618854212, 0.2506749511, 0.2393452534, 0.2279570159, 0.2165685411, 0.2052352915, 0.1940094917, 0.1829397904, 0.1720709831, 0.1614437984, 0.1510966328, 0.1412695241, 0.1320815565, 0.1234911612, 0.1154594729, 0.1079501541, 0.1009292306, 0.0943649380, 0.0882275775, 0.0824893822, 0.0771243909, 0.0721083309, 0.0674185083, 0.0630337051, 0.0589340831, 0.0551010948, 0.0515173984, 0.0481667806, 0.0450340822, 0.0421051299, 0.0393666726, 0.0368063205, 0.0344124902, 0.0321743511, 0.0300817773, 0.0281253016, 0.0262960723, 0.0245858134, 0.0229867873, 0.0214917595, 0.0200939663, 0.0187870835, 0.0175651985, 0.0164227831, 0.0153546688, 0.0143560231, 0.0134223279, 0.0125493589, 0.0117331666, 0.0109700583, 0.0102565814, 0.0095895080, 0.0089658201, 0.0083826960, 0.0078374975, 0.0073277579, 0.0068511710, 0.0064055806, 0.0059889708, 0.0055994568, 0.0052352761, 0.0048947812, 0.0045764317, 0.0042787871]
+PHI_T = [0.0001338302, 0.0001632564, 0.0001986555, 0.0002411266, 0.0002919469, 0.0003525957, 0.0004247803, 0.0005104650, 0.0006119019, 0.0007316645, 0.0008726827, 0.0010382813, 0.0012322192, 0.0014587308, 0.0017225689, 0.0020290481, 0.0023840882, 0.0027942584, 0.0032668191, 0.0038097621, 0.0044318484, 0.0051426409, 0.0059525324, 0.0068727667, 0.0079154516, 0.0090935625, 0.0104209348, 0.0119122436, 0.0135829692, 0.0154493471, 0.0175283005, 0.0198373544, 0.0223945303, 0.0252182199, 0.0283270377, 0.0317396518, 0.0354745928, 0.0395500416, 0.0439835960, 0.0487920186, 0.0539909665, 0.0595947061, 0.0656158148, 0.0720648743, 0.0789501583, 0.0862773188, 0.0940490774, 0.1022649246, 0.1109208347, 0.1200090007, 0.1295175957, 0.1394305664, 0.1497274656, 0.1603833273, 0.1713685920, 0.1826490854, 0.1941860550, 0.2059362687, 0.2178521770, 0.2298821407, 0.2419707245, 0.2540590565, 0.2660852499, 0.2779848861, 0.2896915528, 0.3011374322, 0.3122539334, 0.3229723597, 0.3332246029, 0.3429438550, 0.3520653268, 0.3605269625, 0.3682701403, 0.3752403469, 0.3813878155, 0.3866681168, 0.3910426940, 0.3944793309, 0.3969525475, 0.3984439141, 0.3989422804, 0.3984439141, 0.3969525475, 0.3944793309, 0.3910426940, 0.3866681168, 0.3813878155, 0.3752403469, 0.3682701403, 0.3605269625, 0.3520653268, 0.3429438550, 0.3332246029, 0.3229723597, 0.3122539334, 0.3011374322, 0.2896915528, 0.2779848861, 0.2660852499, 0.2540590565, 0.2419707245, 0.2298821407, 0.2178521770, 0.2059362687, 0.1941860550, 0.1826490854, 0.1713685920, 0.1603833273, 0.1497274656, 0.1394305664, 0.1295175957, 0.1200090007, 0.1109208347, 0.1022649246, 0.0940490774, 0.0862773188, 0.0789501583, 0.0720648743, 0.0656158148, 0.0595947061, 0.0539909665, 0.0487920186, 0.0439835960, 0.0395500416, 0.0354745928, 0.0317396518, 0.0283270377, 0.0252182199, 0.0223945303, 0.0198373544, 0.0175283005, 0.0154493471, 0.0135829692, 0.0119122436, 0.0104209348, 0.0090935625, 0.0079154516, 0.0068727667, 0.0059525324, 0.0051426409, 0.0044318484, 0.0038097621, 0.0032668191, 0.0027942584, 0.0023840882, 0.0020290481, 0.0017225689, 0.0014587308, 0.0012322192, 0.0010382813, 0.0008726827, 0.0007316645, 0.0006119019, 0.0005104650, 0.0004247803, 0.0003525957, 0.0002919469, 0.0002411266, 0.0001986555, 0.0001632564, 0.0001338302]
+EPS_F0 = 0.0579148930
+RHO_TAI_4 = 4.47548750      # rho Huber tại t = 4, dùng ở phần 'Cách đọc hình' 32
+RHO_TI_SO_TAI_4 = 1.7875  # bình phương / Huber tại t = 4
+
+KS_HS = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 1.00, 1.05, 1.10, 1.15, 1.20, 1.25, 1.30, 1.35, 1.40, 1.45, 1.50, 1.55, 1.60, 1.65, 1.70, 1.75, 1.80, 1.85, 1.90, 1.95, 2.00, 2.05, 2.10, 2.15, 2.20, 2.25, 2.30, 2.35, 2.40, 2.45, 2.50, 2.55, 2.60, 2.65, 2.70, 2.75, 2.80, 2.85, 2.90, 2.95, 3.00]
+HIEUSUAT = [0.6534648726, 0.6701118347, 0.6865238117, 0.7026651795, 0.7185018022, 0.7340012827, 0.7491331953, 0.7638692967, 0.7781837135, 0.7920531043, 0.8054567928, 0.8183768731, 0.8307982838, 0.8427088524, 0.8540993087, 0.8649632682, 0.8752971873, 0.8851002892, 0.8943744659, 0.9031241548, 0.9113561948, 0.9190796633, 0.9263056975, 0.9330473028, 0.9393191509, 0.9451373721, 0.9505193431, 0.9554834740, 0.9600489980, 0.9642357653, 0.9680640443, 0.9715543321, 0.9747271762, 0.9776030091, 0.9802019971, 0.9825439034, 0.9846479684, 0.9865328046, 0.9882163089, 0.9897155897, 0.9910469108, 0.9922256490, 0.9932662665, 0.9941822955, 0.9949863358, 0.9956900616, 0.9963042387, 0.9968387491, 0.9973026228, 0.9977040744, 0.9980505448, 0.9983487453, 0.9986047039, 0.9988238132, 0.9990108777, 0.9991701619, 0.9993054358, 0.9994200204, 0.9995168302, 0.9995984137]
+
+X_DAY = [-3.00, -2.75, -2.50, -2.25, -2.00, -1.75, -1.50, -1.25, -1.00, -0.75, -0.50, -0.25, 0.00, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 2.75, 3.00]
+DAY_0 = [2.0225009847, 1.5181919779, 2.0247478148, 1.5005566494]   # OLS chặn, OLS góc, Huber chặn, Huber góc
+DAY_20 = [2.3390400133, 1.3221270603, 2.0289057327, 1.4990501567]   # OLS chặn, OLS góc, Huber chặn, Huber góc
+DAY_50 = [2.8138485562, 1.0280296840, 2.0289057327, 1.4990501567]   # OLS chặn, OLS góc, Huber chặn, Huber góc
+DAY_100 = [3.6051961277, 0.5378673900, 2.0289057327, 1.4990501567]   # OLS chặn, OLS góc, Huber chặn, Huber góc
+X_LEV = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000]
+GOC_OLS_LEV = [0.7923637083, 0.1933227051, -0.8938765520, -1.0092735930, -0.2370683869, 0.7196398293, 1.1025691233, 1.3003004997, 1.4199948781, 1.4599859019, 1.4799909463, 1.4919960101]
+GOC_HUB_LEV = [1.4637532213, 1.4348924112, 1.3423120135, 1.1974526464, 0.9141054639, 0.7122301531, 1.1015054751, 1.3001685402, 1.4199938060, 1.4599854058, 1.4799898892, 1.4919954121]
+DU_LEV = [39.9530469762, 39.8533473548, 39.1814484055, 36.9325837786, 28.2096128914, 0.5462625192, 0.1219155016, 0.0282883411, 0.0047250478, 0.0011895083, 0.0002851542, 0.0000443698]
+GOC_THAT = 1.5
+X60 = [-0.6517911526, -0.1747172923, 1.6637239914, 0.6591477498, -1.6413972946, -0.0052032642, -0.6234637410, 0.1486315233, -1.6081877842, 0.2417718769, 0.2353809187, 1.5756260314, 0.3166450165, 0.5105466617, -1.4931166850, 2.2527291247, -1.9156455580, 1.1018018558, -0.3299040739, -0.8806465179, -0.6562850109, -0.6720146807, 0.3801890922, -0.1100586953, 1.4825711630, -1.8296040234, -0.0030809647, -0.8920557883, 0.7758718475, -2.1180600422, -0.3436943501, 0.2101729273, -1.4842685840, 0.9852155829, 0.1787134291, 1.0068567707, 0.9591848587, -0.9798545664, -0.7977957579, -0.2033324858, 0.7479597260, 0.8509672910, -0.7096848707, -0.6071971853, -0.7978229152, -0.5842382292, -0.2379233776, -0.1318150477, 2.0581144685, -0.5064036598, -0.2887243670, 0.4585777291, -0.9530740656, -0.3686271491, 0.0133184812, 0.7741459470, -1.3160148587, 1.3714694573, -0.3524573659, 0.1694164211]
+Y60 = [1.8694015750, 2.3987169832, 5.5548178733, 3.1619194412, -0.4817092953, 2.3086736430, 0.0690889983, 3.4371346539, -1.1876679249, 1.1024139354, 4.4094801590, 4.2269941076, 1.2958426524, 4.6180897127, -0.5693876519, 6.4411694749, -1.7029570603, 3.4039227625, -0.1833854643, -1.2299091357, 0.0391378955, 0.9139389605, 3.3682693486, 4.2611324583, 3.1919937495, 0.2646342646, 1.3910375945, 0.5093870114, 1.6826161529, -2.6560758001, 0.7059978721, 1.1221487687, -0.2299572667, 2.7753089105, 3.5187672174, 3.6633048673, 3.6040154773, 1.6676533491, 1.3214186322, 1.6576682893, 3.0312162273, 3.1555022993, 2.0121946500, 1.8722898388, 1.1691835852, 1.9224719833, 1.0985816348, 2.3133002331, 3.6748380398, 2.5876650626, 1.6569617083, 2.8712595944, 1.1697727474, 1.4373497020, 1.7658698368, 4.3510035426, 0.1417283826, 3.1413325130, 1.9108728669, 0.5490041895]
+
+
+────────────────────────────────────────────────────────────────────────────────────────────
+BẢNG I DỰNG LẠI — in ra ĐỦ GIÁ TRỊ, không chỉ chênh lệch. Bài viết in cả
+bảng này, nên script phải in nó ra; nếu không thì 403 ô trong bài không có
+nguồn (bài học 'bảng số không kèm script là bảng sẽ hỏng').
+────────────────────────────────────────────────────────────────────────────────────────────
+  k     Epsi'    Epsi^2   epsmin   e=0     e=0.001 e=0.002 e=0.005 e=0.01  e=0.02  e=0.05  e=0.1   e=0.2   e=0.5  
+  0.0   0.0000   0.0000   1.0000   1.571   1.574   1.577   1.587   1.603   1.636   1.740   1.939   2.454   6.283  
+  0.1   0.0797   0.0095   0.8753   1.492   1.495   1.498   1.508   1.523   1.556   1.658   1.853   2.358   6.137  
+  0.2   0.1585   0.0358   0.7542   1.423   1.426   1.429   1.438   1.454   1.485   1.586   1.778   2.276   6.030  
+  0.3   0.2358   0.0758   0.6401   1.362   1.365   1.368   1.377   1.393   1.424   1.524   1.714   2.209   5.961  
+  0.4   0.3108   0.1265   0.5354   1.309   1.312   1.315   1.324   1.339   1.370   1.470   1.659   2.154   5.930  
+  0.5   0.3829   0.1851   0.4417   1.263   1.266   1.268   1.277   1.293   1.324   1.423   1.613   2.111   5.935  
+  0.6   0.4515   0.2491   0.3599   1.222   1.225   1.228   1.237   1.252   1.284   1.384   1.576   2.079   5.976  
+  0.7   0.5161   0.3160   0.2899   1.187   1.190   1.193   1.202   1.217   1.249   1.351   1.546   2.058   6.053  
+  0.8   0.5763   0.3840   0.2311   1.156   1.159   1.162   1.172   1.187   1.220   1.324   1.522   2.047   6.166  
+  0.9   0.6319   0.4511   0.1825   1.130   1.133   1.136   1.146   1.162   1.195   1.302   1.506   2.046   6.317  
+  1.0   0.6827   0.5161   0.1428   1.107   1.111   1.114   1.124   1.140   1.175   1.284   1.495   2.055   6.506  
+  1.1   0.7287   0.5777   0.1109   1.088   1.091   1.095   1.105   1.122   1.158   1.272   1.490   2.072   6.734  
+  1.2   0.7699   0.6352   0.0855   1.072   1.075   1.079   1.089   1.107   1.144   1.263   1.491   2.099   7.003  
+  1.3   0.8064   0.6880   0.0655   1.058   1.062   1.065   1.076   1.095   1.134   1.258   1.496   2.135   7.314  
+  1.4   0.8385   0.7358   0.0498   1.047   1.050   1.054   1.066   1.086   1.126   1.256   1.507   2.179   7.669  
+  1.5   0.8664   0.7785   0.0376   1.037   1.041   1.045   1.057   1.078   1.121   1.258   1.522   2.233   8.069  
+  1.6   0.8904   0.8160   0.0282   1.029   1.034   1.038   1.051   1.073   1.118   1.262   1.542   2.296   8.517  
+  1.7   0.9109   0.8487   0.0211   1.023   1.027   1.032   1.046   1.069   1.116   1.270   1.567   2.367   9.012  
+  1.8   0.9281   0.8767   0.0156   1.018   1.023   1.027   1.042   1.066   1.117   1.280   1.595   2.448   9.558  
+  1.9   0.9426   0.9006   0.0115   1.014   1.019   1.024   1.039   1.065   1.119   1.292   1.628   2.537   10.154 
+  2.0   0.9545   0.9205   0.0084   1.010   1.016   1.021   1.038   1.065   1.122   1.307   1.665   2.635   10.802 
+  2.1   0.9643   0.9371   0.0061   1.008   1.014   1.019   1.037   1.066   1.127   1.324   1.705   2.742   11.501 
+  2.2   0.9722   0.9507   0.0044   1.006   1.012   1.018   1.037   1.068   1.133   1.342   1.750   2.858   12.253 
+  2.3   0.9786   0.9617   0.0032   1.004   1.011   1.017   1.037   1.071   1.140   1.363   1.798   2.982   13.058 
+  2.4   0.9836   0.9705   0.0023   1.003   1.010   1.017   1.038   1.074   1.148   1.386   1.850   3.114   13.914 
+  2.5   0.9876   0.9776   0.0016   1.002   1.010   1.017   1.040   1.078   1.156   1.410   1.905   3.255   14.821 
+  2.6   0.9907   0.9831   0.0011   1.002   1.010   1.017   1.041   1.082   1.166   1.436   1.963   3.405   15.779 
+  2.7   0.9931   0.9873   0.0008   1.001   1.010   1.018   1.044   1.087   1.176   1.463   2.025   3.562   16.787 
+  2.8   0.9949   0.9906   0.0005   1.001   1.010   1.019   1.046   1.092   1.186   1.492   2.090   3.726   17.843 
+  2.9   0.9963   0.9931   0.0004   1.001   1.010   1.020   1.048   1.097   1.197   1.523   2.158   3.899   18.947 
+  3.0   0.9973   0.9950   0.0003   1.000   1.010   1.021   1.051   1.103   1.209   1.554   2.229   4.078   20.098 
+
+────────────────────────────────────────────────────────────────────────────────────────────
+BẢNG IV DỰNG LẠI — cột NỘI SUY (đường bài báo dùng) và cột CÔNG THỨC.
+────────────────────────────────────────────────────────────────────────────────────────────
+  k     e=0.000   e=0.010   e=0.020   e=0.050   e=0.100   e=0.200  
+  1.0   1.1070    1.1378    1.1707    1.2762    1.4904    2.1517      [nội suy]
+        1.1073    1.1379    1.1700    1.2755    1.4899    2.1503      [công thức]
+  1.1   1.0880    1.1199    1.1540    1.2652    1.4948    2.2315      [nội suy]
+        1.0880    1.1200    1.1535    1.2646    1.4938    2.2314      [công thức]
+  1.2   1.0720    1.1051    1.1407    1.2587    1.5058    2.3445      [nội suy]
+        1.0718    1.1052    1.1405    1.2582    1.5056    2.3435      [công thức]
+  1.3   1.0580    1.0933    1.1310    1.2560    1.5254    2.4963      [nội suy]
+        1.0580    1.0933    1.1306    1.2561    1.5254    2.4949      [công thức]
+  1.4   1.0470    1.0843    1.1239    1.2585    1.5544    2.6997      [nội suy]
+        1.0466    1.0839    1.1235    1.2581    1.5538    2.6986      [công thức]
+  1.5   1.0370    1.0768    1.1196    1.2642    1.5916    2.9759      [nội suy]
+        1.0371    1.0767    1.1189    1.2641    1.5915    2.9755      [công thức]
+  1.6   1.0290    1.0719    1.1169    1.2746    1.6399    3.3622      [nội suy]
+        1.0293    1.0714    1.1166    1.2740    1.6393    3.3612      [công thức]
+  1.7   1.0230    1.0681    1.1166    1.2879    1.6987    3.9220      [nội suy]
+        1.0229    1.0679    1.1165    1.2876    1.6987    3.9213      [công thức]
+  1.8   1.0180    1.0657    1.1184    1.3053    1.7720    qmax=3.36   [nội suy]
+        1.0178    1.0659    1.1182    1.3051    1.7714    4.7915      [công thức]
+  1.9   1.0140    1.0650    1.1214    1.3269    1.8606    qmax=4.02   [nội suy]
+        1.0137    1.0652    1.1216    1.3264    1.8600    6.3043      [công thức]
+  2.0   1.0100    1.0654    1.1353    1.3521    1.9679    qmax=5.15   [nội suy]
+        1.0104    1.0657    1.1266    1.3517    1.9681    9.5462      [công thức]
+
+Mọi con số bài trích đều nằm trong đầu ra này.
+--------------------------------------------------------------------------------------------
+v_huber.py chạy xong.

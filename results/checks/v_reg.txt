@@ -1,0 +1,132 @@
+
+==============================================================================
+1. Phương trình chuẩn XᵀX bình phương số điều kiện
+==============================================================================
+   Vandermonde bậc 5 : κ(X) = 3.593e+03   κ(XᵀX) = 1.291e+07   tỉ số = 3.593e+03  (κ² = 3.593e+03)
+   Vandermonde bậc 9 : κ(X) = 3.600e+06   κ(XᵀX) = 1.296e+13   tỉ số = 3.600e+06  (κ² = 3.600e+06)
+
+   Hệ quả trên số thực float64 — nghiệm nào đúng hơn?
+      p=8   κ(X)=1.12e+05   sai số ptr chuẩn = 6.421e-07   sai số QR = 4.555e-12
+      p=12  κ(X)=1.18e+08   sai số ptr chuẩn = 3.579e-01   sai số QR = 7.410e-09
+      p=16  κ(X)=1.33e+11   sai số ptr chuẩn = 4.386e+01   sai số QR = 6.759e-06
+
+==============================================================================
+2. Gauss–Markov: OLS có phương sai nhỏ nhất trong các ước lượng tuyến tính không chệch
+==============================================================================
+   Cov lý thuyết σ²(XᵀX)⁻¹, đường chéo: [0.0333 0.0355 0.0367]
+   OLS      : chệch = 0.0005   tổng phương sai = 0.1054
+   không OLS: chệch = 0.0215   tổng phương sai = 80.8503
+   lý thuyết: tổng phương sai OLS = tr((XᵀX)⁻¹) = 0.1054
+   -> cả hai không chệch, nhưng phương sai OLS nhỏ hơn 766.77 lần
+
+==============================================================================
+3. Hoerl & Kennard 1970: tồn tại k > 0 làm MSE ridge < MSE OLS
+==============================================================================
+   κ(XᵀX) = 5.013e+02  (thiết kế gần suy biến)
+   k = 0 (OLS)      : MSE = 7.2612   (chệch² 0.0007 + phương sai 7.2605)
+   k* = 0.6261        : MSE = 4.3271   (chệch² 2.0812 + phương sai 2.2459)
+   -> giảm 1.7 lần MSE. Định lý 4.3 của bài báo được xác nhận trên thiết kế này.
+   Khoảng k cho MSE < MSE(OLS): (0, 4.238]
+
+==============================================================================
+4. Zou & Hastie 2005, mục 2: ba giới hạn của lasso
+==============================================================================
+   (a) n = 20, p = 60 — 'lasso chọn nhiều nhất n biến' (Zou & Hastie mục 2.1)
+       LARS (nghiệm chính xác)         : nhiều nhất 20 biến  -> KHỚP
+       Lasso(coordinate descent, sklearn): nhiều nhất 27 biến  -> KHÔNG khớp — xem ghi chú
+       Ghi chú: ở α = 0.001, 27 hệ số 'khác 0' của coordinate descent có biên độ
+       nhỏ nhất 1.77e-03 — đó là ngưỡng hội tụ chưa siết, không phải nghiệm lasso thật.
+       Siết tol xuống 1e-14: 18 biến.
+
+   (b) ba cột gần trùng nhau (tương quan 0.9999), hệ số thật chia đều
+       Lasso  α=0.3         hệ số 3 cột nhóm = [0.     0.     2.6667]
+       Ridge  α=0.3         hệ số 3 cột nhóm = [0.9472 1.0326 1.1057]
+       ElNet  α=0.3 l1=0.5  hệ số 3 cột nhóm = [0.8936 0.8963 0.9006]
+
+   (c) n=120 > p=10, ρ = 0.995, 60 lần lặp, siêu tham số chọn bằng CV 5 mảnh
+       Zou & Hastie mục 2.3: 'the prediction performance of the lasso is dominated
+       by ridge regression' trong tình huống này. RMSE kiểm tra đo được:
+       Lasso       2.0746 ± 0.2033   (chênh với lasso: +0.0000 ± 0.0000)
+       Ridge       2.0746 ± 0.1996   (chênh với lasso: +0.0000 ± 0.0055)
+       ElasticNet  2.0764 ± 0.1996   (chênh với lasso: +0.0018 ± 0.0049)
+       Ridge thắng lasso ở 31/60 lần lặp.
+       -> KHÔNG tái hiện được. Lý do: collinear() ở trên chỉ có 2 nhân tố ẩn nên
+       hệ số thật THƯA (8/10 bằng 0) — đó là sân nhà của lasso, không phải của ridge.
+
+       Làm lại với hệ số thật DÀY (10/10 khác 0), ρ giảm dần theo khoảng cách 0.9^|i−j|:
+       Lasso       3.2321 ± 0.3339   (chênh với lasso: +0.0000 ± 0.0000)
+       Ridge       3.1479 ± 0.3239   (chênh với lasso: -0.0842 ± 0.0135)
+       ElasticNet  3.1647 ± 0.3291   (chênh với lasso: -0.0674 ± 0.0119)
+       Ridge thắng lasso ở 49/60 lần lặp -> khớp Zou & Hastie
+
+==============================================================================
+5. Zou & Hastie 2005, Định lý 1: chặn |β̂i − β̂j| của elastic net
+==============================================================================
+   Chặn:  |β̂i − β̂j| / ‖y‖₁  ≤  (1/λ₂)·√(2(1−ρ))
+   ρ        λ₂           đo được        chặn           thoả?
+   0.8057   0.5          6.913e-04      1.247e+00      có
+   0.8057   5            6.151e-04      1.247e-01      có
+   0.9779   0.5          8.422e-04      4.208e-01      có
+   0.9779   5            4.385e-04      4.208e-02      có
+   0.9982   0.5          4.101e-04      1.188e-01      có
+   0.9982   5            6.668e-05      1.188e-02      có
+
+==============================================================================
+6. Efron 2004: dựng lại thứ tự biến vào mô hình trên bộ diabetes
+==============================================================================
+   n = 442, p = 10, tên biến: ['age', 'sex', 'bmi', 'bp', 's1', 's2', 's3', 's4', 's5', 's6']
+   Bài báo (Hình 1, chú thích): 'covariates enter ... in order j = 3, 9, 4, 7, ..., 1'
+   dựng lại thứ tự vào        : [3, 9, 4, 7, 2, 10, 5, 8, 6, 1, 7]
+   bốn biến đầu [3, 9, 4, 7] -> KHỚP
+   Bài báo nói biến CUỐI vào là 1; dựng lại: biến thứ 10 vào là 1 -> KHỚP
+   *** Đường lasso có 1 lần một biến RỜI mô hình rồi vào lại: biến 7 rời ở bước 10
+       Đó là bước 'lasso modification' ở mục 3.1 của bài báo — LARS thuần
+       không bao giờ bỏ biến, nên đường lasso dài hơn 1 bước so với p = 10.
+   Bài báo: t chạy từ 0 tới t = 3460.00 (nơi β̂ = OLS)
+   dựng lại: Σ|β̂ⱼ| tại bước cuối = 3459.98
+   Σ|β̂_OLS| = 3459.98   (lệch 4.775e-11)
+   Tại t = 1000, biến khác 0: [3, 4, 7, 9]   (bài báo nói: 3, 9, 4, 7)
+   -> KHỚP
+
+==============================================================================
+7. Huber 1964: δ = 1.345 cho hiệu suất 95 % tại phân phối chuẩn
+==============================================================================
+   δ = 0.500  hiệu suất tại phân phối chuẩn = 0.7879
+   δ = 1.000  hiệu suất tại phân phối chuẩn = 0.8998
+   δ = 1.345  hiệu suất tại phân phối chuẩn = 0.9483
+   δ = 2.000  hiệu suất tại phân phối chuẩn = 0.9902
+   δ = 5.000  hiệu suất tại phân phối chuẩn = 1.0000
+   (giá trị δ = 1.345 là con số kinh điển cho 95 %; đo được ở trên)
+
+   Điểm sụp đổ — thêm 1 điểm ngoại lai vào n = 100:
+      lệch +0         OLS = 1.1762     Huber = 1.1096     (hệ số thật 1.0)
+      lệch +10        OLS = 1.1188     Huber = 1.1011     (hệ số thật 1.0)
+      lệch +100       OLS = 0.6018     Huber = 1.1011     (hệ số thật 1.0)
+      lệch +1000      OLS = -4.5685    Huber = 1.1011     (hệ số thật 1.0)
+      lệch +100000    OLS = -573.3023  Huber = 1.1011     (hệ số thật 1.0)
+
+==============================================================================
+8. Koenker & Bassett: hồi quy phân vị
+==============================================================================
+   Dữ liệu phương sai không đều; hệ số thật của trung bình: 1 + 0.5x
+   τ      hệ số (b₀, b₁)         tỉ lệ y dưới   số dư = 0
+   0.10   ( 0.6800,  0.1123)      0.0975         2
+   0.25   ( 0.8284,  0.2894)      0.2475         2
+   0.50   ( 1.0726,  0.4740)      0.4975         2
+   0.75   ( 1.3677,  0.6618)      0.7475         2
+   0.90   ( 1.4476,  0.8713)      0.8975         2
+   Koenker: số dư đúng bằng 0 phải bằng số tham số p = 2 -> xem cột cuối
+  -> Huber Regression/robust_vs_quantile.png 99142 B
+
+==============================================================================
+9. Hồi quy tuyến tính Bayes: hậu nghiệm MAP đúng bằng ridge với λ = σ²/τ²
+==============================================================================
+   σ² = 2.25  τ² = 4.00  ->  λ = σ²/τ² = 0.5625
+   trung bình hậu nghiệm : [0.9132 2.2328 3.1887 3.7659]
+   ridge(λ)              : [0.9132 2.2328 3.1887 3.7659]
+   lệch lớn nhất         : 4.441e-16
+   độ lệch chuẩn hậu nghiệm: [0.2088 0.1892 0.2314 0.2034]
+   hệ số thật              : [1. 2. 3. 4.]
+   hệ số thật nằm trong khoảng 95 %: 4/4
+
+XONG — mọi con số trên sinh từ file này.

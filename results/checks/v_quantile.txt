@@ -1,0 +1,719 @@
+
+============================================================================================
+0. MOI TRUONG
+============================================================================================
+numpy 2.4.4 · scipy 1.17.1 · python 3.13.11
+scikit-learn 1.9.1
+so luong torch/BLAS ghim ve 1 truoc khi import numpy
+
+============================================================================================
+1. DINH NGHIA tr.38 — bai toan cuc tieu, va no THU GON ve phan vi mau
+============================================================================================
+Bai bao dinh nghia phan vi mau thu theta la NGHIEM BAT KY cua
+    min_b [ sum_{t: y_t >= b} theta|y_t - b| + sum_{t: y_t < b} (1-theta)|y_t - b| ]
+va phan vi hoi quy thu theta bang cach thay b boi x_t b. Trong mo hinh vi tri
+(K = 1, x_t = 1 voi moi t) hai bai toan TRUNG NHAU — tr.38.
+
+theta     nghiem bai bao     np.quantile        lech         
+0.10      -1.0217387112      -1.0217387112      0.00e+00     
+0.25      -0.5480597228      -0.5480597228      0.00e+00     
+0.50      0.1641357216       0.1641357216       0.00e+00     
+0.75      0.8684699198       0.8684699198       0.00e+00     
+0.90      1.9737383178       1.9737383178       0.00e+00     
+lech toi da tren 5 muc theta = 0.000e+00   (T = 19 nen T*theta khong nguyen o ca 5 muc)
+
+============================================================================================
+2. DINH LY 3.1 tr.39 — beta*(theta) = X(h)^{-1} y(h) voi mot h nao do
+============================================================================================
+"If X has rank K then the set of regression quantiles, B*(theta), has at least
+ one element of the form beta*(theta) = X(h)^{-1} y(h) for some h in H."
+
+Kiem: giai LP, roi di tim tap con h gom K quan sat ma duong di QUA ca K diem.
+
+T      K      theta   |h| tim   = K ?       lech beta      psi      
+30     2      0.15    2         co          0.000e+00      9.0907   
+30     2      0.50    2         co          2.220e-16      15.7853  
+30     2      0.85    2         co          2.220e-16      6.0453   
+40     3      0.15    3         co          3.053e-16      20.3937  
+40     3      0.50    3         co          4.441e-16      15.7489  
+40     3      0.85    3         co          1.332e-15      12.2761  
+55     4      0.15    4         co          8.882e-16      14.5316  
+55     4      0.50    4         co          5.551e-16      23.7435  
+55     4      0.85    4         co          1.110e-15      22.0754  
+80     2      0.15    2         co          2.776e-17      22.1257  
+80     2      0.50    2         co          0.000e+00      49.2808  
+80     2      0.85    2         co          1.554e-15      36.9035  
+120    3      0.15    3         co          1.145e-16      36.2972  
+120    3      0.50    3         co          6.661e-16      63.3332  
+120    3      0.85    3         co          8.882e-16      31.9632  
+
+15/15 truong hop co X(h)^{-1}y(h) trung nghiem LP toi 1e-8
+15/15 truong hop co DUNG K phan du bang 0
+
+============================================================================================
+3. DINH LY 3.2 tr.39 — bon tinh chat dong bien doi (i) (ii) (iii) (iv)
+============================================================================================
+(i)   beta*(theta, lam*y, X) = lam*beta*(theta, y, X),  lam = 2.75 >= 0  lech = 2.220e-16
+(ii)  beta*(1-theta, lam*y, X) = lam*beta*(theta, y, X), lam = -1.60 <= 0 lech = 4.996e-15
+(iii) beta*(theta, y + X*gam, X) = beta*(theta, y, X) + gam              lech = 4.441e-16
+(iv)  beta*(theta, y, X*A) = A^{-1} beta*(theta, y, X)                   lech = 4.441e-16
+
+lech toi da tren ca bon tinh chat = 4.996e-15
+
+He qua tr.40: (i) va (ii) cho beta*(1/2) dong bien doi theo THANG DO;
+(iii) cho dong bien doi theo VI TRI; (iv) cho dong bien doi khi doi tham so thiet ke.
+
+============================================================================================
+4. DINH LY 3.4 tr.41 — cong thuc (3.7):  N(u*) <= T*theta <= T - P(u*) = N + Z
+============================================================================================
+Day la phat bieu CHAT CHE ve 'ti le nam duoi', thay cho moi cong thuc dem tu nghi.
+Dieu kien: X co mot cot toan 1.
+
+T     K    theta   N      Z      P      T*theta   (3.7) N <= T*th <= N+Z  
+25    2    0.10    2      2      21     2.50      DUNG                    
+25    2    0.37    8      2      15     9.25      DUNG                    
+25    2    0.50    11     2      12     12.50     DUNG                    
+25    2    0.75    18     2      5      18.75     DUNG                    
+25    2    0.90    21     2      2      22.50     DUNG                    
+40    2    0.10    3      2      35     4.00      DUNG                    
+40    2    0.37    13     2      25     14.80     DUNG                    
+40    2    0.50    19     2      19     20.00     DUNG                    
+40    2    0.75    29     2      9      30.00     DUNG                    
+40    2    0.90    35     2      3      36.00     DUNG                    
+60    3    0.10    4      3      53     6.00      DUNG                    
+60    3    0.37    21     3      36     22.20     DUNG                    
+60    3    0.50    28     3      29     30.00     DUNG                    
+60    3    0.75    43     3      14     45.00     DUNG                    
+60    3    0.90    52     3      5      54.00     DUNG                    
+100   4    0.10    8      4      88     10.00     DUNG                    
+100   4    0.37    35     4      61     37.00     DUNG                    
+100   4    0.50    48     4      48     50.00     DUNG                    
+100   4    0.75    73     4      23     75.00     DUNG                    
+100   4    0.90    89     4      7      90.00     DUNG                    
+
+(3.7) dung o 20/20 truong hop.
+Z(u*) = K o 20/20 truong hop — dung Remark tr.41 ('Z(u*) = K with probability one').
+
+REMARK tr.41 co HAI cach doc, thu ca hai roi de SO CHO SAI quyet dinh:
+  (A) nhu ban in: 'at least T*theta observations BELOW ... at most T*theta + K ABOVE'
+  (B) suy thang tu (3.7): so quan sat duoi-hoac-tren-duong N+Z >= T*theta,
+      va so quan sat PHIA TREN P <= T(1-theta)
+  (A) ve 'below':  20/20 truong hop SAI
+  (A) ve 'above':  8/20 truong hop SAI
+  (B) ve 'below':  0/20 truong hop SAI
+  (B) ve 'above':  0/20 truong hop SAI
+  -> cach doc B la cach khop voi (3.7).
+
+============================================================================================
+4b. DINH LY 3.3 tr.40 — dieu kien (3.1) cho nghiem DUY NHAT, va (3.6)
+============================================================================================
+(3.1)  (theta-1) iota'_K  <  sum_{t in h_ngang} [1/2 - 1/2 sgn(y_t - x_t beta*) - theta]
+                             x_t X(h)^{-1}   <  theta iota'_K
+
+Ve giua la mot vecto K chieu; bat dang thuc doc theo TUNG toa do. Kiem: tinh ve giua
+tai nghiem LP, roi xem no co nam han trong khoang (theta-1, theta) khong.
+
+T     K     theta   ve giua, tung toa do                     trong khoang?  bien gan nhat
+30    2     0.20    -0.67777  0.07777                        DUNG           0.122230    
+30    2     0.50    -0.03747  0.03747                        DUNG           0.462527    
+30    2     0.80     0.32140  0.27860                        DUNG           0.478599    
+45    3     0.20    -0.02203 -0.66582 -0.71215               DUNG           0.087853    
+45    3     0.50    -0.01443  0.38716 -0.37273               DUNG           0.112843    
+45    3     0.80     0.74989  0.38164  0.26847               DUNG           0.050106    
+70    2     0.20     0.00201 -0.60201                        DUNG           0.197986    
+70    2     0.50    -0.35810  0.35810                        DUNG           0.141900    
+70    2     0.80     0.54140  0.05860                        DUNG           0.258601    
+90    3     0.20    -0.78707 -0.55189 -0.06104               DUNG           0.012928    
+90    3     0.50    -0.24682 -0.38990  0.13672               DUNG           0.110105    
+90    3     0.80     0.69262 -0.00550  0.71289               DUNG           0.087111    
+
+(3.1) dung o 12/12 truong hop.
+
+PHEP THU NGUOC — lay mot tap h KHONG toi uu roi tinh lai ve giua:
+  thu 779 tap h khac: 779 tap VI PHAM (3.1), 0 tap thoa.
+  -> (3.1) phan biet duoc nghiem toi uu voi cac tap con khac
+
+CONG THUC (3.6) tr.40 — ban thu gon cua (3.1) ve MO HINH VI TRI:
+   theta - 1 < sum_{t in h_ngang} [1/2 - 1/2 sgn(y_t - y(h)) - theta] < theta
+Bai bao tr.41 doc no thanh: 'the number of y_t's less that y(h) be strictly between
+T*theta - 1 and T*theta. This in turn demands that T*theta be nonintegral.'
+
+T     theta    T*theta     nguyen?       so y_t < phan vi mau           trong (T*th-1, T*th)?
+19    0.25     4.75        khong         4                              dung       
+19    0.50     9.50        khong         9                              dung       
+19    0.90     17.10       khong         17                             dung       
+20    0.25     5.00        CO            5                              SAI (T*theta nguyen)
+20    0.50     10.00       CO            9                              SAI (T*theta nguyen)
+20    0.90     18.00       CO            17                             SAI (T*theta nguyen)
+40    0.25     10.00       CO            10                             SAI (T*theta nguyen)
+40    0.50     20.00       CO            20                             SAI (T*theta nguyen)
+40    0.90     36.00       CO            35                             SAI (T*theta nguyen)
+
+Doc cot cuoi: moi dong co T*theta NGUYEN deu truot bat dang thuc ngat — dung nhu
+cau tr.41 noi. Do khong phai loi cua bai bao ma la dieu bai bao BAO TRUOC.
+
+============================================================================================
+5. DINH LY 3.5 tr.41 — day quan sat RA XA duong thi duong KHONG doi
+============================================================================================
+"beta*(theta) in B*(theta, X beta* + D u*, X) where D is any T x T diagonal matrix
+ with nonnegative elements." Remark tr.42 goi day la mot tinh chat hinh hoc:
+keo mot quan sat ra xa ma KHONG doi ben thi duong dung yen.
+
+he so d_t cua ma tran D      beta* sau khi day      lech          
+d_t = 1 (khong doi)          [ 0.81123  0.49303] 0.000e+00     
+d_t = 3 (day xa 3 lan)       [ 0.81123  0.49303] 0.000e+00     
+d_t = 25                     [ 0.81123  0.49303] 0.000e+00     
+d_t ngau nhien trong [0,50]  [ 0.81123  0.49303] 0.000e+00     
+
+lech toi da = 0.000e+00
+PHEP THU NGUOC — cho mot he so AM (D khong con khong am) thi tinh chat phai GAY:
+  doi dau mot he so d_t: lech = 0.030621  -> duong DA doi, dung nhu du doan
+
+============================================================================================
+6. BANG II tr.42 — DUNG LAI CA BANG, VA DUNG LAI CA DU LIEU BAI BAO KHONG IN
+============================================================================================
+Bai bao viet: 'an illustration in Table II of the regression quantiles for all
+theta in (0,1) in a simple bivariate model with five observations. Note that for
+theta in {7/22, 1/2, 3/4} the problem admits multiple solutions.' (tr.42)
+Bang in NGHIEM cho bon khoang theta — nhung KHONG in nam quan sat.
+
+Bang II nhu bai bao in:
+            0 < th <= 7/22   7/22 <= th <= 1/2   1/2 <= th <= 3/4   3/4 <= th < 1
+beta*_1 :   6/7              21/8                13/6               17/3
+beta*_2 :   4/7              3/8                 5/6                1/3
+
+BUOC 1 — hai nghiem lien tiep phai CHUNG dung mot quan sat (K - 1 = 1 diem).
+Giao diem cua hai duong lien tiep vi the la mot quan sat cua bai bao:
+   nghiem 1 & 2  ->  (x, y) = (9, 6)
+   nghiem 2 & 3  ->  (x, y) = (1, 3)
+   nghiem 3 & 4  ->  (x, y) = (7, 8)
+Ca ba deu la SO NGUYEN, chua can gia thiet gi.
+
+BUOC 2 — hai quan sat con lai nam tren duong dau va duong cuoi. Quet chung.
+Mien quet: x huu ty p/q voi |p/q| <= 20 va q <= 6 (y suy ra tu phuong trinh duong).
+So gia tri x duoc thu cho moi dau: 481  ->  231361 cap.
+
+So bo du lieu cho ra DUNG bon nghiem cua Bang II, dung thu tu : 5041
+So bo du lieu DONG THOI khop ca ba moc 7/22, 1/2, 3/4          : 1
+
+-> Bon nghiem KHONG du de xac dinh du lieu; ba moc moi la bang chung phan xu.
+
+NAM QUAN SAT CUA BAI BAO, dung lai duoc:
+   t  :  1   2   3   4   5
+   x_t:  1   2   4   7   9
+   y_t:  3   2   7   8   6
+   (ca muoi con so deu NGUYEN — khong phai gia thiet, la ket qua cua phep quet)
+
+BUOC 3 — dung lai TOAN BO Bang II tu nam diem do:
+khoang theta           beta*_1        beta*_2        so nghiem co so
+0 <= theta <= 7/22     6/7            4/7            1           
+7/22 <= theta <= 1/2   21/8           3/8            1           
+1/2 <= theta <= 3/4    13/6           5/6            1           
+3/4 <= theta <= 1      17/3           1/3            1           
+
+So o khop Bang II: 8/8
+So moc khop     : 3/3
+
+BUOC 4 — kiem cau 'for theta in {7/22, 1/2, 3/4} the problem admits multiple
+solutions': dem so nghiem co so toi uu DUNG TAI moc.
+   theta = 7/22  : 2 nghiem co so toi uu  ->  (6/7, 4/7) ; (21/8, 3/8)
+   theta = 1/2   : 2 nghiem co so toi uu  ->  (13/6, 5/6) ; (21/8, 3/8)
+   theta = 3/4   : 2 nghiem co so toi uu  ->  (13/6, 5/6) ; (17/3, 1/3)
+Ca ba moc deu co NHIEU HON MOT nghiem — dung nhu bai bao noi.
+
+BUOC 5 — PHEP THU NGUOC. Doi mot toa do di mot don vi roi dung lai Bang II:
+   khong bo nao trong 10 bo lech mot don vi con khop -> nam diem la duy nhat
+   trong mien quet.
+
+BUOC 6 — doi chieu voi bo giai LP so thuc (khong dung phan so):
+theta     beta*_1 LP       beta*_1 Bang II  beta*_2 LP       beta*_2 Bang II  lech      
+0.20      0.8571428571     0.8571428571     0.5714285714     0.5714285714     0.00e+00  
+0.40      2.6250000000     2.6250000000     0.3750000000     0.3750000000     0.00e+00  
+0.60      2.1666666667     2.1666666667     0.8333333333     0.8333333333     1.11e-16  
+0.90      5.6666666667     5.6666666667     0.3333333333     0.3333333333     5.55e-17  
+lech toi da = 1.11e-16
+
+BUOC 7 — in lai TUNG BUOC cua vi du chay tay o muc 0.4 cua bai. Moi vi du so
+chay tay in trong bai deu phai co mot muc script in lai tung buoc (luat YOLOv5).
+theta = 0.2, nghiem beta* = (6/7, 4/7):
+   t    x_t    y_t    y_mu       u_t        dau       dong gop    
+   1    1      3      10/7       11/7       duong     11/35       
+   2    2      2      2          0          bang 0    0           
+   3    4      7      22/7       27/7       duong     27/35       
+   4    7      8      34/7       22/7       duong     22/35       
+   5    9      6      6          0          bang 0    0           
+   tong = 12/7 = 1.7142857143
+   so phan du bang 0 = 2 (= K = 2) · N = 0 · T*theta = 1
+
+============================================================================================
+7. PHU LUC tr.48-49 — bai doi ngau (D'), thu ma bai viet cu bo qua hoan toan
+============================================================================================
+(P)  min [theta*i'r+ + (1-theta)*i'r-]   s.t.  y = Xb + r+ - r-,  r+, r- >= 0
+(D)  max [y'd]                           s.t.  X'd = 0,  d in [theta-1, theta]^T
+(D') max [y'Delta]                       s.t.  X'Delta = (1-theta)X'i, Delta in [0,1]^T
+     voi Delta = d + 1 - theta  (bai bao tr.48).
+
+Doi bien Delta = d + 1 - theta lam ham muc tieu doi mot hang so: 
+  y'Delta = y'd + (1-theta) * sum(y_t).  Nen gia tri (D') KHONG bang gia tri (P);
+  hieu cua chung phai bang DUNG (1-theta)*sum(y). Kiem dung cot cuoi.
+  sum(y_t) = 61.8568301855
+
+theta    gia tri (P)      gia tri (D')     hieu            (1-th)*sum(y)   D=0      D=1      0<D<1  
+0.10     11.1291849034    66.8003320704    55.6711471670   55.6711471670   3        44       3      
+0.25     21.2813946627    67.6740173019    46.3926226391   46.3926226391   11       36       3      
+0.50     26.1498570738    57.0782721665    30.9284150928   30.9284150928   23       24       3      
+0.75     23.7758664638    39.2400740102    15.4642075464   15.4642075464   36       11       3      
+0.90     13.6064126495    19.7920956681    6.1856830186    6.1856830186    44       3        3      
+
+Lech toi da giua hieu do duoc va (1-theta)*sum(y): 7.105e-15
+
+So toa do Delta nam HAN trong (0,1) bang K = 3 o 5/5 muc theta.
+Do la dung cac quan sat co phan du bang 0 — tuc tap h cua Dinh ly 3.1.
+
+QUAN HE DAU — do ra chu KHONG doan. Bu tru chat che cho:
+  phan du DUONG  (r+ > 0) -> d_t chan tren = theta   -> Delta_t = 1
+  phan du AM     (r- > 0) -> d_t chan duoi = theta-1 -> Delta_t = 0
+  phan du BANG 0          -> d_t tu do trong khoang  -> 0 < Delta_t < 1
+  theta = 0.35: so quan sat vi pham quan he tren : 0 / 50
+  cach doc NGUOC lai (Delta=1 khi phan du am)    : 47 / 50 vi pham
+  so quan sat co 0 < Delta < 1                   : 3 (= K = 3)
+
+"parametric variation of the right-hand-side of (D') permits economical solution
+ for many, or indeed all, theta in [0,1]" (tr.49) — ve phai (1-theta)X'i la duong
+thang theo theta, nen doi theta chi doi VE PHAI, khong doi ma tran rang buoc.
+
+============================================================================================
+8. DINH LY 4.1 tr.42 — omega_ij = theta_i(1-theta_j) / [f(xi_i) f(xi_j)],  i <= j
+============================================================================================
+Chuan N(0,1), theta = 0.25, 0.50, 0.75 — ma tran Omega theo cong thuc:
+     1.85676747    0.98600262    0.61892249
+     0.98600262    1.57079633    0.98600262
+     0.61892249    0.98600262    1.85676747
+
+Kiem bang Monte-Carlo: T = 4000, 40000 lan lap, lay phan vi mau roi nhan sqrt(T).
+Ma tran hiep phuong sai DO DUOC:
+     1.83918199    0.97455879    0.61418825
+     0.97455879    1.56773998    0.98631444
+     0.61418825    0.98631444    1.85867144
+
+Lech tuong doi toi da: 1.160629 %
+
+Truong hop rieng tr.43: trung vi co phuong sai tiem can [2 f(xi(1/2))]^{-2}.
+  Chuan N(0,1) : [2*f(0)]^{-2} = 1.5707963268
+  Laplace      : [2*f(0)]^{-2} = 1.0000000000   (f(0) = 1/2)
+  Cauchy       : [2*f(0)]^{-2} = 2.4674011003   (f(0) = 1/pi)
+
+============================================================================================
+9. DINH LY 4.2 tr.43 — hiep phuong sai la Omega(theta;F) KRONECKER Q^{-1}
+============================================================================================
+sqrt(T)[beta*_T(theta) - beta(theta)] -> N(0, Omega tich Kronecker Q^{-1}),
+voi Q = lim T^{-1} X'X. Dieu kien (ii) doi cot dau cua X la cot toan 1.
+
+So chieu cua ma tran: 6 x 6  (M*K = 2*3)
+
+i        j        ly thuyet          do duoc            lech t.doi %  
+0        0        1.7394092819       1.6670211423       4.1617        
+0        3        0.7454611208       0.7629515345       2.3463        
+1        1        1.7902822401       1.7686650674       1.2075        
+1        4        0.7672638172       0.7829686977       2.0469        
+2        2        1.9692339849       1.9520124081       0.8745        
+2        5        0.8439574221       0.8439656082       0.0010        
+3        3        1.7394092819       1.7659543140       1.5261        
+4        4        1.7902822401       1.7742037801       0.8981        
+5        5        1.9692339849       1.9922773254       1.1702        
+
+Lech TUONG DOI chi doc duoc o nhung o ly thuyet khong gan 0. Tren 16 o co
+|ly thuyet| > 10% cua o lon nhat: lech tuong doi TRUNG BINH 1.7149 %, LON NHAT 4.1617 %
+Tren TOAN BO 36 o: lech TUYET DOI toi da 0.072388, trong khi o lon nhat la 1.969234
+(Bao ca hai thuoc do la bat buoc: mot o co gia tri ly thuyet 0.0004 cho lech
+ tuong doi 488 %% ma lech tuyet doi chi 0.002 — con so tuong doi o do vo nghia.)
+(R = 3000 lan lap, T = 300 — sai so Monte-Carlo cua mot phuong sai co ~ sqrt(2/R) = 2.5820 %)
+
+PHEP THU NGUOC — bo cot toan 1 khoi X (vi pham dieu kien (ii)) thi Dinh ly 3.4
+khong con ap dung duoc:
+  khong co cot 1: N = 150, T*theta = 90.0, (3.7) doi N <= T*theta -> SAI, dung nhu du doan
+
+============================================================================================
+10. DINH LY 4.3 tr.46 — uoc luong to hop pi'Omega pi . Q^{-1}
+============================================================================================
+Remark tr.46 neu dich danh hai bo trong so:
+  Gastwirth: (pi(1/3), pi(1/2), pi(2/3)) = (.3, .4, .3)
+  Trimean  : (pi(1/4), pi(1/2), pi(3/4)) = (1/4, 1/2, 1/4)
+
+F            trung binh       trung vi         Gastwirth        Trimean         
+Chuan        1.0000000000     1.5707963268     1.2566824519     1.1951616383    
+Laplace      2.0000000000     1.0000000000     1.1800000000     1.2500000000    
+Logistic     3.2898681337     4.0000000000     3.2950000000     3.2222222222    
+Cauchy       vo cuc           2.4674011003     2.5002997816     3.0842513753    
+
+Kiem Gastwirth bang Monte-Carlo tren phan phoi Chuan (T = 4000, 20000 lan lap):
+  ly thuyet T*Var = 1.2566824519   do duoc = 1.2572191811   lech = 0.0427 %
+
+============================================================================================
+11. TR.36 — 'asymptotic efficiency of NEARLY EIGHTY PER CENT for the Gaussian,
+============================================================================================
+     Laplace, logistic, AND Cauchy distributions' — noi ve Gastwirth.
+Hieu suat = can duoi Cramer-Rao / phuong sai tiem can = 1 / [I(F) * V].
+
+F            I(F)             V(Gastwirth)       hieu suat        'gan 80%' ?     
+Chuan        1.0000000000     1.2566824519       0.7957459726     79.57 %         
+Laplace      1.0000000000     1.1800000000       0.8474576271     84.75 %         
+Logistic     0.3333333333     3.2950000000       0.9104704097     91.05 %         
+Cauchy       0.5000000000     2.5002997816       0.7999040814     79.99 %         
+
+Khoang hieu suat tren bon phan phoi: [0.7957459726 ; 0.9104704097], do rong 0.1147244371
+
+CACH DOC. Cau tr.36 phai doc la mot SAN, khong phai mot khoang: 'nearly eighty
+per cent' dung cho CA BON phan phoi cung mot luc, nen no noi ve gia tri NHO NHAT.
+  gia tri nho nhat trong bon = 0.7957459726  ->  79.57 %
+  so phan phoi co hieu suat >= 0.79 : 4/4
+  phan phoi CAO nhat la Logistic voi 0.9104704097 — bai bao noi NHE hon thuc te o day.
+
+Doi chieu: trung binh mau, cung thuoc do.
+F            V(trung binh)      hieu suat       
+Chuan        1.0000000000       1.0000000000    
+Laplace      2.0000000000       0.5000000000    
+Logistic     3.2898681337       0.9118906528    
+Cauchy       vo cuc             0 (hieu suat bang khong)
+
+Do la y cua cau tr.36: trung binh mau co hieu suat 1 o Chuan nhung 0 o Cauchy;
+Gastwirth giu 0.7957 - 0.9105 tren CA BON.
+
+============================================================================================
+12. BANG I tr.37 — dung lai 30 o bang Monte-Carlo, T = 20
+============================================================================================
+Bang I nhu bai bao in (chu thich a: 'Abstracted from Exhibit 5 in Andrews, et al. [3]'):
+Estimators           Normal     10% 3sigma   10% 10sigma   Laplace    Cauchy      
+Mean                 1.00       1.88         11.54         2.10       12548.0     
+10% trimmed mean     1.06       1.31         1.46          1.60       7.3         
+25% trimmed mean     1.20       1.41         1.47          1.33       3.1         
+Median               1.50       1.70         1.80          1.37       2.9         
+Gastwirth            1.23       1.45         1.51          1.35       3.1         
+Trimean              1.15       1.37         1.48          1.43       3.9         
+
+Chu thich bang: b '10% 3sigma' = hon hop Gauss .9*Phi(1) + .1*Phi(3);
+                c '10% 10sigma' = .9*Phi(1) + .1*Phi(10);
+                d Gastwirth = .3*beta*(1/3) + .4*beta*(1/2) + .3*beta*(2/3);
+                e Trimean   = 1/4*beta*(1/4) + 1/2*beta*(1/2) + 1/4*beta*(3/4).
+
+BUOC 1 — dieu kien duy nhat cua chinh bai bao (tr.41): T*theta phai KHONG NGUYEN.
+Voi T = 20:
+   Median      0.5000: T*theta = 10.00 (NGUYEN -> khong duy nhat)
+   Gastwirth   0.3333: T*theta = 6.67 (khong nguyen -> duy nhat) | 0.5000: T*theta = 10.00 (NGUYEN -> khong duy nhat) | 0.6667: T*theta = 13.33 (khong nguyen -> duy nhat)
+   Trimean     0.2500: T*theta = 5.00 (NGUYEN -> khong duy nhat) | 0.5000: T*theta = 10.00 (NGUYEN -> khong duy nhat) | 0.7500: T*theta = 15.00 (NGUYEN -> khong duy nhat)
+-> quy uoc chon nghiem trong doan la mot LUA CHON, khong phai mot dinh nghia.
+   Do ca hai quy uoc roi de TONG SAI LECH chon (luat 'thu ca hai cach doc').
+
+BUOC 2 — chay lai Monte-Carlo: T = 20, 120000 lan lap, 3 hat giong.
+
+Tong sai lech tuyet doi so voi Bang I, TRU cot Cauchy (cot do co phuong sai vo cuc):
+   quy uoc 'trung binh  ' : tong sai lech tren 24 o = 1.742388
+   quy uoc 'lay dau duoi' : tong sai lech tren 24 o = 1.999683
+-> quy uoc khop hon: 'trung binh'
+
+BANG I DUNG LAI (quy uoc 'trung binh', trung binh 3 hat giong):
+Estimators           Normal     10% 3sigma   10% 10sigma   Laplace    Cauchy      
+Mean                 1.0016     1.7961       10.9091       1.9958     7318896.7   
+10% trimmed mean     1.0562     1.3295       2.0006        1.5522     8.4         
+25% trimmed mean     1.1870     1.3983       1.5128        1.3255     3.2         
+Median               1.4695     1.7016       1.8028        1.3329     2.8         
+Gastwirth            1.2202     1.4346       1.5454        1.3447     3.2         
+Trimean              1.1525     1.3785       1.5409        1.4016     4.1         
+
+24 o ngoai cot Cauchy: lech tuyet doi trung binh 0.072600, lon nhat 0.630925
+So o khop den chu so thap phan thu hai bai bao in: 6/24
+So o lech duoi 0.10 : 21/24
+So o lech duoi 0.20 : 22/24
+
+Nam o lech nhieu nhat:
+   Mean                 10% 10sigma   bai bao    11.54   do lai    10.9091   lech  -0.6309
+   10% trimmed mean     10% 10sigma   bai bao     1.46   do lai     2.0006   lech  +0.5406
+   Mean                 Laplace       bai bao     2.10   do lai     1.9958   lech  -0.1042
+   Mean                 10% 3sigma    bai bao     1.88   do lai     1.7961   lech  -0.0839
+   Trimean              10% 10sigma   bai bao     1.48   do lai     1.5409   lech  +0.0609
+
+CHAN DOAN o lech nhat — '10% trimmed mean' tren hon hop 10% 10sigma.
+Cat 10% cua T = 20 la 2 quan sat moi dau. So diem bi nhiem la Binomial(20, 0.1).
+  P(so diem nhiem >= 3) = 0.3230731948 — tuc 32.31 % so mau co diem nhiem CON LAI
+  sau khi cat. Do la ly do phep do cho 2.0006 thay vi 1.46.
+
+GIA TRI LY THUYET CHINH XAC cua hai cot hon hop, cho hang 'Mean'. Phuong sai cua
+mot hon hop Gauss .9*Phi(1) + .1*Phi(c) la .9*1 + .1*c^2, dung voi MOI T:
+   10% 3sigma    ly thuyet 1.800000     Bang I 1.88       do lai 1.796074    
+                 Bang I lech ly thuyet +0.080000 (+4.4444 %) · do lai lech -0.003926 (-0.2181 %)
+   10% 10sigma   ly thuyet 10.900000    Bang I 11.54      do lai 10.909075   
+                 Bang I lech ly thuyet +0.640000 (+5.8716 %) · do lai lech +0.009075 (+0.0833 %)
+
+LUU Y VE NGUON: chu thich a cua Bang I ghi 'Abstracted from Exhibit 5 in
+Andrews, et al. [3]'. Bang nay KHONG phai phep do cua Koenker & Bassett; chenh
+lech o tren la chenh voi Nghien cuu Ben vung Princeton, khong phai voi bai bao.
+
+COT CAUCHY phai doc rieng — phuong sai LY THUYET cua trung binh la VO CUC,
+nen con so 12548.0 khong tai lap duoc. Ba hat giong cho:
+   Mean                 bai bao   12548.0   ba lan chay:  2660671.83  1294552.54 18001465.84   do rong khoang 16706913.30
+   10% trimmed mean     bai bao       7.3   ba lan chay:        8.59        8.24        8.28   do rong khoang 0.34
+   25% trimmed mean     bai bao       3.1   ba lan chay:        3.18        3.18        3.18   do rong khoang 0.00
+   Median               bai bao       2.9   ba lan chay:        2.79        2.79        2.79   do rong khoang 0.01
+   Gastwirth            bai bao       3.1   ba lan chay:        3.15        3.15        3.15   do rong khoang 0.00
+   Trimean              bai bao       3.9   ba lan chay:        4.10        4.08        4.10   do rong khoang 0.02
+
+Ti so do rong khoang / gia tri bai bao, cot Cauchy:
+   Mean                 1331.440333
+   10% trimmed mean     0.047030
+   25% trimmed mean     0.000655
+   Median               0.002361
+   Gastwirth            0.000754
+   Trimean              0.005732
+
+BUOC 3 — so gia tri TIEM CAN (Dinh ly 4.1) voi gia tri T = 20 cua Bang I.
+Bai bao tr.43 noi dich danh: 'The asymptotic variance of the Gastwirth or trimean
+estimator of Table I can be easily calculated in a similar manner from Theorem 4.1'.
+
+uoc luong            F            tiem can         Bang I (T=20)    chenh         
+Mean                 Normal       1.0000000000     1.00                  +0.000000
+Mean                 Laplace      2.0000000000     2.10                  +0.100000
+Median               Normal       1.5707963268     1.50                  -0.070796
+Median               Laplace      1.0000000000     1.37                  +0.370000
+Gastwirth            Normal       1.2566824519     1.23                  -0.026682
+Gastwirth            Laplace      1.1800000000     1.35                  +0.170000
+Trimean              Normal       1.1951616383     1.15                  -0.045162
+Trimean              Laplace      1.2500000000     1.43                  +0.180000
+
+Cot Cauchy, gia tri tiem can:
+   Mean      : VO CUC          (bai bao in 12548.0 — mot con so cua T = 20, khong hoi tu)
+   Median    : 2.4674011003  (bai bao in 2.9)
+   Gastwirth : 2.5002997816  (bai bao in 3.1)
+   Trimean   : 3.0842513753  (bai bao in 3.9)
+
+Ti so 'trung binh / trung vi' o cot Cauchy: Bang I cho 4326.8966;
+tiem can cho VO CUC. Do la o duy nhat cua bang ma ly thuyet va so do khac nhau
+ve BAN CHAT chu khong ve do lon.
+
+============================================================================================
+13. TR.35 — dieu kien cua Laplace nam 1818:  [2 f(0)]^{-1} < sigma
+============================================================================================
+'In 1818 Laplace proved that in the simple model of bivariate regression through
+ the origin, this least absolute error (LAE) estimator had smaller asymptotic
+ variance than the least squares estimator if the error law of the model had
+ variance, sigma^2, and density at the median, f(0), satisfying [2f(0)]^{-1} < sigma.'
+
+F            [2 f(0)]^{-1}      sigma              LAE thang ?    ti so phuong sai LS/LAE
+Chuan        1.2533141373       1.0000000000       KHONG          0.6366197724          
+Laplace      1.0000000000       1.4142135624       co             2.0000000000          
+Logistic     2.0000000000       1.8137993642       KHONG          0.8224670334          
+Cauchy       1.5707963268       vo cuc             co             vo cuc                
+
+Chuan la phan phoi DUY NHAT trong bon cai tren ma LAE thua — va no thua dung
+he so 1.5707963268, tuc mat 57.0796 % hieu suat.
+
+============================================================================================
+14. TR.46 — cau in nghieng, phat bieu chinh thuc dau tien theo loi tac gia
+============================================================================================
+'the regression median is seen to be more efficient than the least squares estimator
+ in the linear model for any distribution for which the median is more efficient than
+ the mean in the location model'
+
+Ly do ngan: hiep phuong sai cua trung vi hoi quy la [2f(0)]^{-2} Q^{-1} (tr.46),
+cua binh phuong toi thieu la sigma^2 Q^{-1}. Q^{-1} la CHUNG, nen no TRIET TIEU:
+ti so hieu suat trong mo hinh tuyen tinh bang dung ti so trong mo hinh vi tri,
+KHONG phu thuoc ma tran thiet ke.
+
+Kiem bang so: bon ma tran thiet ke rat khac nhau, cung mot phan phoi nhieu Laplace.
+thiet ke                           so dieu kien Q   T*Var(trung vi)    T*Var(OLS)         ti so         
+cot 1 + chuan doc lap              1.1307           1.2332909661       2.0132426695       1.6324149977  
+cot 1 + deu [0,10]                 413.2403         0.1421365742       0.2440732158       1.7171739028  
+cot 1 + tuong quan 0.95            41.0451          11.9128473776      21.0200437769      1.7644852746  
+cot 1 + thang do lech 100 lan      11860.6211       1.4996277235       2.3868531559       1.5916304550  
+
+Ti so ly thuyet trong mo hinh VI TRI voi Laplace: sigma^2 / [2f(0)]^{-2} = 2.0000000000
+
+Bon ti so do duoc deu DUOI 2. Do KHONG phai chenh giua hai mo hinh — do la thieu
+hut HUU HAN MAU cua chinh trung vi. Phep so dung la so voi MO HINH VI TRI o CUNG
+mot T, vi Dinh ly 4.2 noi hai ti so bang nhau, chu khong noi ti so bang 2 o T huu han.
+
+T          vi tri: T*Var(t.vi)    vi tri: T*Var(t.binh)  ti so           
+100        1.1472854890           1.9973488265           1.7409344454    
+300        1.0908493902           2.0032182230           1.8363838683    
+1000       1.0495099444           2.0097253592           1.9149178814    
+10000      1.0176868042           2.0055131780           1.9706585265    
+Ti so trong mo hinh vi tri tien den 2 khi T tang: 1.7409 -> 1.8364 -> 1.9149 -> 1.9707
+
+SO SANH CHAT: o T = 300, mo hinh VI TRI cho ti so 1.8363838683;
+bon thiet ke cua mo hinh TUYEN TINH cho [1.5916304550 ; 1.7644852746].
+Khoang cua mo hinh tuyen tinh KHONG chua gia tri cua mo hinh vi tri.
+
+HAI CAU HOI PHAI TACH RA, va ca hai deu do duoc.
+
+(a) Do rong 0.1728 giua bon THIET KE co lon hon nhieu Monte-Carlo khong?
+    Chay LAI CUNG MOT thiet ke voi bon hat giong khac nhau:
+      hat giong 0 : ti so 1.4342067517
+      hat giong 1 : ti so 1.6484974954
+      hat giong 2 : ti so 1.5943967172
+      hat giong 3 : ti so 1.6659206426
+    do rong theo HAT GIONG  : 0.2317138908
+    do rong theo THIET KE   : 0.1728548196
+    -> hai do rong cung co: khong ket luan duoc rang thiet ke co anh huong
+
+(b) Vi sao bon ti so tuyen tinh deu THAP hon mo hinh vi tri o cung T = 300?
+    Gia thuyet: so THAM SO K an bot bac tu do, va hieu ung do co bac K/T nen o
+    T nho no phai RO HON. Do o T = 150, moi K hai hat giong de co do rong.
+K      hat giong  T*Var(trung vi)      T*Var(OLS)           ti so           
+1      0          1.1213505311         1.9009662071         1.6952470743    
+1      1          1.1613904353         1.9960549360         1.7186769197    
+2      0          1.1683344202         2.0175319940         1.7268446080    
+2      1          1.2214275607         1.9959007144         1.6340721125    
+3      0          1.1933687799         1.9813892690         1.6603327507    
+3      1          1.2424433325         2.1271047162         1.7120335878    
+6      0          1.4219334279         2.0249293829         1.4240676413    
+6      1          1.3642770048         2.0307227265         1.4884973649    
+12     0          1.5663326508         2.1491754964         1.3721066820    
+12     1          1.5896536290         2.2075005456         1.3886676351    
+
+K      ti so trung binh   do rong hai hat giong
+1      1.7069619970       0.0234298454      
+2      1.6804583603       0.0927724955      
+3      1.6861831693       0.0517008371      
+6      1.4562825031       0.0644297235      
+12     1.3803871586       0.0165609531      
+
+    Chenh giua K = 1 va K = 12 : 0.3265748385
+    Do rong hat giong LON NHAT : 0.0927724955
+    -> hieu ung K DO DUOC: no lon hon nhieu hat giong
+    Ti so giam don dieu theo K o 3/4 buoc lien tiep.
+    K = 1 CHINH LA mo hinh vi tri; no cho 1.7069619970 o T = 150.
+    Dinh ly 4.2 la phat bieu TIEM CAN — no khong noi gi ve T huu han, nen
+    chenh lech nay khong phai bang chung chong lai no.
+Bon ti so DO DUOC: khoang [1.5916304550 ; 1.7644852746], do rong 0.1728548196
+So dieu kien cua Q chay tu 1.1307 toi 11860.6211 — gap 10489.3279 lan — ma ti so van
+nam trong mot khoang rong 0.1728548196. Do la Q^{-1} triet tieu, do bang so.
+
+============================================================================================
+15. TR.47 — binh phuong toi thieu CAT DUOI, dung hai phan vi hoi quy
+============================================================================================
+'Let alpha be the desired trimming proportion. Calculate beta*(alpha) and
+ beta*(1-alpha) for the sample. By Theorem 3.4 there will be approximately T*alpha
+ observations below the former and above the latter. These observations are set
+ aside, and the remaining observations are subjected to a least squares fit.'
+
+Day la de xuat thuat toan chinh cua muc 5 bai bao — va no chi ton THEM HAI bai LP.
+
+nhieu            OLS: T*Var(he so)    cat 10%: T*Var       cat 25%: T*Var       loi/hai OLS   
+Chuan            0.1289638257         0.1379624408         0.1611059531         0.934775      
+Laplace          0.2194952124         0.1732591227         0.1402596802         1.564920      
+10% 10sigma      1.3444140361         0.1711421367         0.1807821260         7.855541      
+
+Cot cuoi la ti so 'phuong sai OLS / phuong sai ban cat tot nhat'. Lon hon 1 nghia la
+cat co loi; nho hon 1 nghia la cat phai TRA GIA. Do la chu 'insurance' o muc 5 tr.48.
+
+============================================================================================
+16. TR.37 — 'In Sections 4 through 6 below' nhung bai bao chi co NAM muc
+============================================================================================
+Danh sach muc danh so thuc te cua bai bao, doc tu ban in:
+   muc 1  tr.33   INTRODUCTION
+   muc 2  tr.34   BACKGROUND AND MOTIVATION
+   muc 3  tr.38   REGRESSION QUANTILES
+   muc 4  tr.42   THE ASYMPTOTIC DISTRIBUTION THEORY OF REGRESSION QUANTILES
+   muc 5  tr.48   CONCLUSION
+   PHU LUC   tr.48  COMPUTATIONAL ASPECTS OF REGRESSION QUANTILES
+   THAM KHAO tr.49  43 muc
+
+So muc danh so: 5. Cau tr.37 hua 'Sections 4 through 6' — muc 6 KHONG TON TAI.
+Ban thao nhan thang 2/1975, ban sua nhan thang 1/1977 (tr.48) — hai nam giua hai moc.
+
+============================================================================================
+17. NOI SANG THUC HANH HOM NAY — doi chieu voi scikit-learn
+============================================================================================
+Du lieu: T = 400, y = 1 + 0.5x + (0.3 + 0.3x)*N(0,1) — phuong sai TANG theo x.
+
+theta    beta*_1          beta*_2          lech sklearn   ti le duoi   N          Z         
+0.10     0.3597812245     0.2064511239     0.00e+00       0.097500     39         2         
+0.25     0.6467400754     0.3323229047     0.00e+00       0.247500     99         2         
+0.50     0.8819308829     0.5543104328     0.00e+00       0.497500     199        2         
+0.75     1.0799527250     0.7376227500     0.00e+00       0.747500     299        2         
+0.90     1.3078586526     0.8781836986     0.00e+00       0.897500     359        2         
+
+He so goc di tu 0.2064511239 (theta = 0.10) toi 0.8781836986 (theta = 0.90), tuc gap 4.2537123647 lan.
+OLS tren cung du lieu: he so chan 0.8263081793, he so goc 0.5409838544 — DUNG MOT duong.
+
+Do phu: khoang [beta*(0.05), beta*(0.95)] so voi khoang OLS +- 1.96 s.
+   toan bo du lieu : phan vi 0.905000   OLS 0.937500
+
+khuc x         phan vi 5-95%    OLS +- 1.96 s    so diem   
+[0, 2)         0.894737         1.000000         76        
+[2, 4)         0.886364         1.000000         88        
+[4, 6)         0.936709         0.974684         79        
+[6, 8)         0.922078         0.896104         77        
+[8, 10)        0.887500         0.812500         80        
+
+Chenh lech giua o te nhat va o tot nhat cua tung cach:
+   phan vi : 0.050345  (tu 0.886364 toi 0.936709)
+   OLS     : 0.187500  (tu 0.812500 toi 1.000000)
+   ti so hai do rong: 3.7242857143 lan
+
+MANG CHO KHOI MA SINH HINH (day thang, khong go tay):
+X_HINH = [0.0014488841, 0.0105591996, 0.0302901413, 0.0415275554, 0.049036484, 0.0561762474, 0.1513719165, 0.1570495105]
+THETA  = [0.1, 0.25, 0.5, 0.75, 0.9]
+B0     = [0.3597812245, 0.6467400754, 0.8819308829, 1.079952725, 1.3078586526]
+B1     = [0.2064511239, 0.3323229047, 0.5543104328, 0.73762275, 0.8781836986]
+PHU_PV = [0.8947368421, 0.8863636364, 0.9367088608, 0.9220779221, 0.8875]
+PHU_OLS= [1.0, 1.0, 0.9746835443, 0.8961038961, 0.8125]
+BII_X  = [1.0, 2.0, 4.0, 7.0, 9.0]
+BII_Y  = [3.0, 2.0, 7.0, 8.0, 6.0]
+BII_B0 = [0.8571428571428571, 2.625, 2.1666666666666665, 5.666666666666667]
+BII_B1 = [0.5714285714285714, 0.375, 0.8333333333333334, 0.3333333333333333]
+BII_MOC= [0.3181818181818182, 0.5, 0.75]
+
+============================================================================================
+18. HAM MAT MAT — cach viet cua bai bao va cach viet hien dai la MOT
+============================================================================================
+Bai bao tr.38 viet bang HAI TONG tach theo dau phan du;
+cach viet hien dai la rho_theta(u) = u(theta - 1[u < 0]). Kiem chung tren luoi:
+   theta = 0.1 : lech toi da tren 100001 diem = 0.000e+00
+   theta = 0.5 : lech toi da tren 100001 diem = 0.000e+00
+   theta = 0.9 : lech toi da tren 100001 diem = 0.000e+00
+
+Voi theta = 1/2 thi rho = |u|/2, tuc uoc luong LAE — 'the regression quantile for
+theta = 1/2' (tr.38). Gia tri cu the:
+   rho_0.10( -4.0) =   3.600000   rho_0.50( -4.0) =   2.000000   rho_0.90( -4.0) =   0.400000
+   rho_0.10( -1.0) =   0.900000   rho_0.50( -1.0) =   0.500000   rho_0.90( -1.0) =   0.100000
+   rho_0.10(  0.0) =   0.000000   rho_0.50(  0.0) =   0.000000   rho_0.90(  0.0) =   0.000000
+   rho_0.10(  1.0) =   0.100000   rho_0.50(  1.0) =   0.500000   rho_0.90(  1.0) =   0.900000
+   rho_0.10(  4.0) =   0.400000   rho_0.50(  4.0) =   2.000000   rho_0.90(  4.0) =   3.600000
+
+============================================================================================
+18b. GIA PHAI TRA — do thoi gian binh phuong toi thieu so voi quy hoach tuyen tinh
+============================================================================================
+Con so nay KHONG tai lap duoc giua cac may va cac lan chay; day la MOT lan chay,
+va bai viet phai ghi ro nhu the (luat ve cot thoi gian).
+
+T              K        OLS (ms)         1 phan vi (ms)   9 phan vi (ms)   9 pv / OLS  
+200            3        0.0241           5.1870           41.2283          1708.74     
+1000           3        0.0437           53.9975          493.6984         11290.74    
+5000           3        0.1009           1062.3422        9139.6646        90582.54    
+1000           10       0.0898           80.7734          698.9009         7783.86     
+
+Cot cuoi la con so dang nho: muon CA MOT DAI chin muc phan vi thi phai tra bao
+nhieu lan so voi mot lan binh phuong toi thieu.
+
+============================================================================================
+19. KIEM KE BAI BAO — nhung con so bai viet trich o bang doi chieu
+============================================================================================
+So khung da cat tu ban in (dem file, KHONG go tay): 0
+(khong co PDF tren may nay — xem muc 0.5 cua bai)
+
+Nhung con so sau DOC TAY tu ban in, vi bai bao la ban quet nen khong cong cu nao
+trong tools/ dem ho duoc. Chung duoc khai o day de bai viet co mot nguon:
+   so HINH VE cua bai bao                 : 0
+   so BANG so cua bai bao                 : 2
+   so muc DANH SO                         : 5
+   so phu luc                             : 1
+   so DINH LY                             : 8
+   so cong thuc DANH SO                   : 22
+   so nhan cong thuc khong danh so (P/D/D'): 3
+   so muc tai lieu tham khao              : 43
+   so o cua Bang I                        : 30
+   so o cua Bang II                       : 8
+
+============================================================================================
+XONG — 312.8 giay
+============================================================================================

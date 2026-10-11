@@ -1,0 +1,15 @@
+
+============================================================================================
+1  Môi trường và quy ước
+============================================================================================
+   numpy 2.4.4 · pypdfium2 5.13.0
+   số luồng BLAS ghim bằng biến môi trường = 1 (OMP/OPENBLAS/MKL/NUMEXPR/VECLIB)
+   mọi phép tuyến tính chạy float64; không dùng GPU — bài toán lớn nhất là 25×10
+
+--- stderr ---
+Traceback (most recent call last):
+  File "/home/hongquan/Documents/GitHub/regression_comparison/checks/v_bayes.py", line 62, in <module>
+    doc = pdfium.PdfDocument(PDF)
+  File "/home/hongquan/miniconda3/lib/python3.13/site-packages/pypdfium2/_helpers/document.py", line 62, in __init__
+    raise FileNotFoundError(input)
+FileNotFoundError: /home/hongquan/Documents/GitHub/regression_comparison/AI algorithms/_papers/2006 - Bishop - Pattern Recognition and Machine Learning.pdf

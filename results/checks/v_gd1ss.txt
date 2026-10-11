@@ -1,0 +1,148 @@
+
+==============================================================================
+350  Machine Learning (Introduction) — luật viết tay vs học từ dữ liệu
+==============================================================================
+   Chuyên gia chốt luật trên 500 hồ sơ cũ, rồi áp cho 20 000 hồ sơ mới:
+       số luật     trên hồ sơ cũ trên hồ sơ mới
+       1                   54.0%          49.9%
+       4                   73.4%          73.3%
+       16                  79.0%          78.7%
+       64                  82.4%          77.1%
+       256                 88.2%          71.5%
+       1024                95.8%          61.2%
+       2 hệ số học          81.4%          80.4%
+   -> Thêm luật làm điểm trên hồ sơ CŨ tăng tới 95.8%, còn trên hồ sơ MỚI
+      thì TỤT xuống 61.2%. Hai con số học được thắng 19.2 điểm và không cần
+      ai ngồi viết luật. Đó là lý do ML tồn tại.
+
+==============================================================================
+370  Polynomial Regression — đường thẳng trên dữ liệu cong
+==============================================================================
+   bậc 1: RMSE = 0.2962
+   bậc 2: RMSE = 0.2962
+   bậc 3: RMSE = 0.0937
+   bậc 5: RMSE = 0.0920
+   -> bậc 1 sang bậc 3: RMSE 0.2962 -> 0.0937, giảm 3.2 lần.
+   Nhiễu thật có độ lệch chuẩn 0.10, nên bậc 3 đã chạm sàn; bậc 1 thì không.
+
+   Thêm dữ liệu có cứu được đường thẳng không?
+       n =      50 -> RMSE bậc 1 = 0.3013
+       n =     200 -> RMSE bậc 1 = 0.2924
+       n =    2000 -> RMSE bậc 1 = 0.2933
+       n =   20000 -> RMSE bậc 1 = 0.2925
+       n =  200000 -> RMSE bậc 1 = 0.2938
+   -> KHÔNG. Sai số đứng yên ở 0.29 dù n tăng 4000 lần — gấp 2.9 lần mức nhiễu 0.10.
+      Thiếu bậc tự do, không phải thiếu dữ liệu: đây là CHỆCH, không phải phương sai.
+
+==============================================================================
+380  Ridge Regression — OLS trên thiết kế gần suy biến
+==============================================================================
+   Hai cột tương quan 0.999939 · κ(X) = 1.832e+02 · κ(XᵀX) = 3.356e+04
+   Hệ số thật: β = [+1.0, +1.0]. TỔNG β₁+β₂ = 2.0 xác định rõ; CÁCH CHIA thì không.
+
+   400 mẫu độc lập cùng phân phối:
+                      β̂₁ t.bình    độ lệch             khoảng β̂₁ ‖β̂−β‖ t.bình
+       OLS                +1.09      14.27   [  -39.09,   +42.57]       16.096
+       Ridge λ=1          +0.99       0.08   [   +0.78,    +1.18]        0.097
+       OLS cho β̂₁ NGƯỢC DẤU với hệ số thật ở 48% số lần chạy.
+       Ridge: 0%.
+   -> Tổng thì OLS ước lượng tốt (β̂₁+β̂₂ lệch chuẩn chỉ 0.14), nhưng TỪNG hệ số
+      thì lệch chuẩn 14.3 — gấp 99 lần. Ridge đổi một chút chệch lấy sai số
+      tổng nhỏ hơn 165.3 lần.
+
+==============================================================================
+390  Lasso Regression — ridge không xoá được biến, best-subset không chạy nổi
+==============================================================================
+   Ridge trên diabetes (10 biến): số hệ số đúng bằng 0 = 0/10
+       hệ số nhỏ nhất theo trị tuyệt đối: 5.91  (nhỏ, nhưng KHÁC 0)
+   Lasso α=0.05 : số hệ số bằng 0 =  3/10   giữ lại: ['sex', 'bmi', 'bp', 's1', 's3', 's5', 's6']
+   Lasso α=0.20 : số hệ số bằng 0 =  4/10   giữ lại: ['sex', 'bmi', 'bp', 's3', 's5', 's6']
+   Lasso α=0.50 : số hệ số bằng 0 =  6/10   giữ lại: ['bmi', 'bp', 's3', 's5']
+   Lasso α=1.00 : số hệ số bằng 0 =  7/10   giữ lại: ['bmi', 'bp', 's5']
+   Lasso α=2.00 : số hệ số bằng 0 =  8/10   giữ lại: ['bmi', 's5']
+
+   Best-subset — cách xoá biến có trước lasso:
+       p = 10 -> phải thử 2^10 = 1.02e+03 tổ hợp
+       p = 20 -> phải thử 2^20 = 1.05e+06 tổ hợp
+       p = 40 -> phải thử 2^40 = 1.1e+12 tổ hợp
+       p = 60 -> phải thử 2^60 = 1.15e+18 tổ hợp
+   -> p=60 là 1.2e+18 tổ hợp. Lasso giải cùng bài toán bằng MỘT lần tối ưu lồi.
+
+==============================================================================
+400  Elastic Net — hai chỗ lasso tắc
+==============================================================================
+   (a) p > n: lasso chọn được NHIỀU NHẤT n biến (Zou & Hastie mục 2.1)
+       n = 30, số biến thật khác 0 = 50
+       Lasso chọn nhiều nhất: 30 biến  -> chặn trên là n, KHÔNG phải 50
+       Elastic Net (l1_ratio=0.5) chọn: 83 biến
+
+   (b) nhóm biến tương quan: lasso chọn 1, vứt phần còn lại
+       Ba cột đầu tương quan 0.9999; hệ số thật CHIA ĐỀU: [3, 3, 3, 0].
+       α      Lasso                              Elastic Net (l1_ratio=0.3)        
+       0.1    [0.85 4.79 3.17]  3/3              [2.89 2.89 2.9 ]  3/3             
+       0.5    [0.65 4.67 3.1 ]  3/3              [2.62 2.62 2.62]  3/3             
+       1.0    [0.4  4.51 3.  ]  3/3              [2.33 2.33 2.33]  3/3             
+       2.0    [0.   4.17 2.75]  2/3              [1.89 1.89 1.89]  3/3             
+   -> KHÔNG phải chuyện lasso xoá mất cột (nó vẫn giữ 3/3 ở hầu hết α).
+      Chỗ hỏng là CHIA KHÔNG ĐỀU: ở α=0.5 lasso trải hệ số ra 4.02 đơn vị
+      (0.65 … 4.67) giữa ba cột tương quan 0.9999, còn Elastic Net trải 0.0020.
+      Chênh nhau 1997 lần. Đó chính là 'hiệu ứng nhóm' Zou & Hastie chứng minh
+      ở Định lý 1: hai cột giống hệt nhau thì Elastic Net BẮT BUỘC cho hai hệ số
+      bằng nhau, còn lasso thì không có ràng buộc nào như vậy.
+
+==============================================================================
+410  LARS — Forward Stagewise cần bao nhiêu bước để tới cùng chỗ
+==============================================================================
+   Đích: Σ|β̂| = 1037.99 (30% quãng đường tới OLS)
+       Stagewise ε=10.00  ->      104 bước, Σ|β̂| = 1040.00
+       Stagewise ε=1.00   ->     1038 bước, Σ|β̂| = 1038.00
+       Stagewise ε=0.10   ->    10380 bước, Σ|β̂| = 1038.00
+       Stagewise ε=0.01   ->   103800 bước, Σ|β̂| = 1038.00
+   LARS       -> 10 bước là hết đường, tới đúng nghiệm OLS.
+   -> ε=0.01 tốn 103,800 bước cho 30% đường; LARS đi CẢ đường trong 10 bước.
+
+==============================================================================
+420  Huber Regression — một điểm ngoại lai làm OLS lệch bao nhiêu
+==============================================================================
+   Hệ số thật: chặn 2.00, góc 1.50
+   Sạch          : OLS chặn +2.12 góc +1.49
+   + 20 ở 1/60 điểm: OLS chặn +2.20 góc +1.54  |  Huber chặn +2.14 góc +1.50
+   + 50 ở 1/60 điểm: OLS chặn +2.32 góc +1.62  |  Huber chặn +2.14 góc +1.50
+   +100 ở 1/60 điểm: OLS chặn +2.53 góc +1.74  |  Huber chặn +2.14 góc +1.50
+   -> 1/60 điểm (1.7% dữ liệu) đẩy hệ số góc OLS lệch 16% khỏi giá trị thật;
+      Huber lệch 0%.
+
+==============================================================================
+430  Quantile Regression — OLS không trả lời được câu hỏi về khoảng
+==============================================================================
+   OLS + khoảng ±1.96σ (giả định nhiễu đều): phủ 93.2% tổng thể
+   Hồi quy phân vị 5%–95%                    : phủ 90.1% tổng thể
+
+   Nhưng con số tổng thể giấu chỗ hỏng. Phủ theo từng khúc của x:
+       khúc x            OLS±σ    phân vị
+       [ 0,  2)         100.0%      90.9%
+       [ 2,  4)          99.7%      89.4%
+       [ 4,  6)          96.5%      89.0%
+       [ 6,  8)          89.8%      90.1%
+       [ 8, 10)          79.8%      90.9%
+   -> OLS phủ quá NHIỀU ở x nhỏ và quá ÍT ở x lớn. Trung bình đúng, từng chỗ sai.
+
+==============================================================================
+440  Bayesian Linear Regression — OLS im lặng ở chỗ nó không biết
+==============================================================================
+   8 điểm huấn luyện, x chỉ nằm trong [-1, 1]. Hệ số thật: 2.00 và 1.50
+   OLS      : β̂ = [+1.118, +1.126]   — hai con số, không kèm gì
+   Hậu nghiệm: β̄ = [+1.103, +1.090]  ± [0.351, 0.534]
+
+   Dự đoán ở ba chỗ — trong vùng dữ liệu và ngoài xa:
+       x               OLS độ lệch chuẩn hậu nghiệm
+       0.0         +1.118          0.351
+       1.0         +2.244          0.636
+       5.0         +6.747          2.690
+       20.0       +23.634         10.684
+   -> OLS đưa một con số ở x=20 y hệt cách nó đưa ở x=0. Hậu nghiệm nói rõ
+      bất định ở x=20 lớn hơn ở x=0 30.4 lần — đó là thông tin OLS vứt đi.
+
+==============================================================================
+Xong. Mọi con số khối SS của 9 bài GĐ 1 lấy từ đây.
+==============================================================================

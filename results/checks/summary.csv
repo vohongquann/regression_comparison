@@ -1,0 +1,12 @@
+script,exit,seconds,lines,lech,loi
+v_linreg,0,0.5,198,2,
+v_poly,0,5.1,242,20,
+v_ridge,1,5.2,284,79,"FileNotFoundError: /home/hongquan/Documents/GitHub/regression_comparison/AI algorithms/_papers/2009 - Hastie, Tibshirani, Friedman - The Elements of Statistical"
+v_lasso,1,106.7,359,503,"FileNotFoundError: /home/hongquan/Documents/GitHub/regression_comparison/AI algorithms/_papers/2009 - Hastie, Tibshirani, Friedman - The Elements of Statistical"
+v_enet,0,89.1,433,0,
+v_lars,0,47.1,813,0,
+v_huber,0,6.5,825,,
+v_quantile,0,313.8,719,,
+v_bayes,1,0.2,7,,FileNotFoundError: /home/hongquan/Documents/GitHub/regression_comparison/AI algorithms/_papers/2006 - Bishop - Pattern Recognition and Machine Learning.pdf
+v_gd1ss,0,7.8,148,0,
+v_reg,0,40.8,132,,
